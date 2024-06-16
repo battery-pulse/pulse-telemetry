@@ -6,23 +6,23 @@ This repository implements Spark applications for transforming raw incoming data
 
 ### Sourced from Postgres
 
-Static metadata on the devices under test and the test sequences for each device.
+Transactional metadata on the devices under test and the test sequences for each device.
 
 - `device_metadata` - Stores static information about each device under test.
 - `device_sequence` - Contains the test sequences for each device.
 
 ### Sourced from Kafka
 
-Data is consumed from Kafka using structured streaming and persisted.
+Event and telemetry streams from Kafka are consumed and persisted.
 
 - `event_log` - Logs discrete events like 'test started', 'test stopped', and other significant occurrences. Unstructured data.
 - `timeseries_raw` - Holds raw data collected from each test sequence, such as voltage, current, temperature, etc. Structured data.
 
 ### Transformed Data
 
-Batch processing jobs concatenate multiple test sequences and perform aggregations.
+Batch processing jobs concatenate telemetry sequences and perform aggregations.
 
-- `timeseries_aggregated` - Aggregated data from multiple sequences, providing a comprehensive history of the device.
+- `timeseries_aggregated` - Aggregates data from multiple sequences, providing a comprehensive history of the device.
 - `statistics_steps` - Aggregates data at the charge/discharge step level, providing statistics such as average voltage, maximum current, total energy, etc.
 - `statistics_cycles` - Aggregates data over full cycles of charge and discharge, including summaries like cycle life, average discharge capacity, and health indicators.
 
