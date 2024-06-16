@@ -23,7 +23,7 @@ Event and telemetry streams from Kafka are consumed and persisted.
 Batch processing jobs concatenate telemetry sequences and perform aggregations.
 
 - `timeseries_aggregated` - Concatenates multiple sequences, providing a comprehensive device history.
-- `statistics_steps` - Aggregates data at the charge/discharge step level, providing statistics such as average voltage, maximum current, total energy, etc.
+- `statistics_steps` - Aggregates data at the charge/discharge step level, providing statistics such as average voltage, maximum current, total energy, and average temperature.
 - `statistics_cycles` - Aggregates data over full cycles of charge and discharge, including summaries like total energy discharged, total cycle time, and health indicators.
 
 ## Persistance Options
