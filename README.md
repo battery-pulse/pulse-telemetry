@@ -48,7 +48,7 @@ Batch applications implement incremental data processing. Any devices with test 
 
 There is also a maintance job (for Delta storage only) for vacuum and compaction operations.
 
-## Deployment & Monitoring
+## Deployment
 
 You can opt for leveraging a managed service (GCP Dataproc, Databricks, etc.) for deploying the Spark applications or use the provided helm chart. The provided helm chart leverages the [Spark Operator](https://github.com/kubeflow/spark-operator).
 
