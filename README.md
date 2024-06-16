@@ -66,7 +66,7 @@ You can deploy yourself using [Strimzi operator](https://github.com/strimzi/stri
 
 #### PostgreSQL
 
-You can deploy yourself using [Postgres operator](https://github.com/zalando/postgres-operator) or use a managed service to handle scaling and backups (reccomended).
+You can deploy yourself using [Postgres operator](https://github.com/zalando/postgres-operator) or use a managed service to handle backups (reccomended).
 
 #### Object Storage
 
