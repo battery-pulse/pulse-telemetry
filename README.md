@@ -50,22 +50,26 @@ There is also a maintance job (for Delta storage only) for vacuum and compaction
 
 ## Deployment
 
-You can opt for leveraging a managed service (GCP Dataproc, Databricks, etc.) for deploying the Spark applications or use the provided helm chart. The provided helm chart leverages the [Spark Operator](https://github.com/kubeflow/spark-operator).
+You can opt for leveraging a managed service (GCP Dataproc, AWS EMR, Databricks, etc.) for deploying the Spark applications or use the provided helm chart. The provided helm chart leverages the [Spark Operator](https://github.com/kubeflow/spark-operator).
 
 ### Helm Chart
 
-This chart packages all of the Spark applications into one deployment. The streaming jobs are deployed as `SparkApplication` and batch jobs as `ScheduledSparkApplication`. See the [documentation](LINKHERE) for all of the available configuration variables.
+This chart packages all of the Spark applications into one deployment. The streaming jobs are deployed as `SparkApplication` and batch jobs as `ScheduledSparkApplication`.
+
+See the [chart documentation](LINKHERE) for all of the available configuration variables.
 
 ### Dependencies
 
 #### Kafka Broker
 
-You can deploy yourself using Strimzi or use a managed service with compatible API.
+You can deploy yourself using [Strimzi operator](https://github.com/strimzi/strimzi-kafka-operator) or use a managed service with compatible API (reccomended).
 
 #### PostgreSQL
 
-Reccomended to use managed service to handle scaling and backups.
+You can deploy yourself using [Postgres operator](https://github.com/zalando/postgres-operator) or use a managed service to handle scaling and backups (reccomended).
 
 #### Object Storage
 
-Only if opting for data lake setup using Delta format (reccomended).
+You can deploy yourself using [Minio operator](https://github.com/minio/operator) or use a managed service (reccomended).
+
+*Only required for Delta Lake setup.*
