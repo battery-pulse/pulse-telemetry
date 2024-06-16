@@ -54,7 +54,7 @@ You can opt for leveraging a managed service (GCP Dataproc, AWS EMR, Databricks,
 
 ### Helm Chart
 
-This chart packages all of the Spark applications into one deployment. The streaming jobs are deployed as `SparkApplication` and batch jobs as `ScheduledSparkApplication`.
+This chart packages all of the Spark applications into one distribution. The streaming jobs are deployed as `SparkApplication` and batch jobs as `ScheduledSparkApplication`.
 
 See the [chart documentation](LINKHERE) for all of the available configuration variables.
 
