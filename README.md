@@ -15,16 +15,16 @@ Transactional metadata on the devices under test and the test sequences for each
 
 Event and telemetry streams from Kafka are consumed and persisted.
 
-- `event_log` - Logs discrete events like 'test started', 'test stopped', and other significant occurrences. Unstructured data.
-- `timeseries_raw` - Holds raw data collected from each test sequence, such as voltage, current, temperature, etc. Structured data.
+- `event_log` - Logs discrete events like 'test started', 'test stopped', and other significant occurrences.
+- `timeseries_raw` - Holds raw data from each test sequence, such as voltage, current, temperature, etc.
 
 ### Transformed Data
 
 Batch processing jobs concatenate telemetry sequences and perform aggregations.
 
-- `timeseries_aggregated` - Aggregates data from multiple sequences, providing a comprehensive history of the device.
+- `timeseries_aggregated` - Aggregates data from multiple sequences, providing a comprehensive history.
 - `statistics_steps` - Aggregates data at the charge/discharge step level, providing statistics such as average voltage, maximum current, total energy, etc.
-- `statistics_cycles` - Aggregates data over full cycles of charge and discharge, including summaries like cycle life, average discharge capacity, and health indicators.
+- `statistics_cycles` - Aggregates data over full cycles of charge and discharge, including summaries like total energy discharged, total cycle time, and health indicators.
 
 ## Persistance Options
 
@@ -34,7 +34,7 @@ The same PostgreSQL schema that houses the device metadata can be used to persis
 
 ### Delta Lake
 
-S3 compatible storage can be used for larger deployments. This is the cheapest option per GB for storage. The Hive metastore allows you to query this backend as a database using SQL.
+Object storage can be used for larger deployments. This is the cheapest option per GB for storage. The Hive metastore allows you to query this backend as a database using SQL.
 
 ## Spark Applications
 
