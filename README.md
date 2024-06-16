@@ -54,7 +54,7 @@ You can opt for leveraging a managed service (GCP Dataproc, Databricks, etc.) fo
 
 ### Spark Helm Chart
 
-The streaming jobs are deployed as `SparkApplication` and batch jobs as `ScheduledSparkApplication`. See the [documentation](LINKHERE) for available chart variables.
+This chart packages all of the Spark applications in this repo. The streaming jobs are deployed as `SparkApplication` and batch jobs as `ScheduledSparkApplication`. See the [documentation](LINKHERE) for available configuration variables.
 
 ### Dependencies
 
