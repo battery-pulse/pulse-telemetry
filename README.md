@@ -52,9 +52,9 @@ There is also a maintance job (for Delta storage only) for vacuum and compaction
 
 You can opt for leveraging a managed service (GCP Dataproc, Databricks, etc.) for deploying the Spark applications or use the provided helm chart. The provided helm chart leverages the [Spark Operator](https://github.com/kubeflow/spark-operator).
 
-### Spark Helm Chart
+### Helm Chart
 
-This chart packages all of the Spark applications in this repo. The streaming jobs are deployed as `SparkApplication` and batch jobs as `ScheduledSparkApplication`. See the [documentation](LINKHERE) for available configuration variables.
+This chart packages all of the Spark applications into one deployment. The streaming jobs are deployed as `SparkApplication` and batch jobs as `ScheduledSparkApplication`. See the [documentation](LINKHERE) for all of the available configuration variables.
 
 ### Dependencies
 
