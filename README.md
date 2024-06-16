@@ -1,6 +1,6 @@
 # Pulse Application Core
 
-This repository foundational Spark applications for transforming raw incoming data into a set of schemas for analysis. You can build off of these schemas for your own custom data analysis by writing and deploying additional Spark applications.
+This repository foundational Spark applications for transforming raw incoming data into a set of schemas for analysis. You can extend these schemas with additional Spark applications.
 
 ## Data Flow Overview
 
