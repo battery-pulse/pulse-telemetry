@@ -30,7 +30,7 @@ Batch processing jobs concatenate multiple test sequences and perform aggregatio
 
 ### PostgreSQL
 
-The same PostgreSQL schema that houses the device metadata can be used to persist the data from Kafka and the transformed data. Only reccomended for small deployments.
+The same PostgreSQL schema that houses the device metadata can be used to persist the incoming and transformed data. Only reccomended for small deployments.
 
 ### Delta Lake
 
