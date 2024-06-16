@@ -72,4 +72,4 @@ You can deploy yourself using [Postgres operator](https://github.com/zalando/pos
 
 You can deploy yourself using [Minio operator](https://github.com/minio/operator) or use a managed service (reccomended).
 
-*Only required for Delta Lake setup.*
+*Only required for Delta Lake configuration.*
