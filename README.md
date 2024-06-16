@@ -40,11 +40,11 @@ S3 compatible storage can be used for larger deployments. This is the cheapest o
 
 ### Streaming
 
-Streaming applications ingest data from Kafka into the storage layer. Streaming is implemented using the Spark structured-streaming dataframe API. There is a partition in Kafka by sequence id that the Spark consumer can take advantage of.
+Streaming applications ingest data from Kafka into persistant storage using Spark structured-streaming. There is a partition in Kafka by sequence id that the consumer takes advantage of.
 
 ### Batch
 
-Batch job applications first load the metadata in postgres and the last updated timestamps for each device sequence. Any devices with sequences that have been updated within the look-back window are processed by the Spark engine.
+Batch applications implement incremental data processing. Any devices with test sequences that have been updated within the look-back window are processed by the Spark engine.
 
 There is also a maintance job (for Delta storage only) for vacuum and compaction operations.
 
