@@ -1,4 +1,4 @@
-# Pulse Application Core
+# Pulse Telemetry
 
 This repository implements Spark applications for transforming raw incoming data into a set of schemas for analysis. You can extend these schemas by deploying additional Spark applications.
 
