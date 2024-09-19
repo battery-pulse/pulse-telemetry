@@ -2,51 +2,17 @@
 
 This repository implements Spark applications for transforming raw incoming data into a set of schemas for analysis. You can extend these schemas by deploying additional Spark applications.
 
-## Data Flow Overview
+## Transformed Data
 
-### Sourced from Postgres
-
-Transactional metadata on the devices under test and the test sequences for each device.
-
-- `device_metadata` - Stores static information about each device under test.
-- `device_sequence` - Contains the test sequences for each device.
-
-### Sourced from Kafka
-
-Event and telemetry streams from Kafka are consumed and persisted.
-
-- `event_log` - Logs discrete events like 'test started', 'test stopped', and other significant occurrences.
-- `timeseries_raw` - Holds raw data from each test sequence, such as voltage, current, temperature, etc.
-
-### Transformed Data
-
-Batch processing jobs concatenate telemetry sequences and perform aggregations.
-
-- `timeseries_aggregated` - Concatenates multiple sequences, providing a comprehensive device history.
+- `timeseries` - Common schema for individual telemetry records from the battery.
 - `statistics_steps` - Aggregates data at the charge/discharge step level, providing statistics such as average voltage, maximum current, total energy, and average temperature.
 - `statistics_cycles` - Aggregates data over full cycles of charge and discharge, including summaries like total energy discharged, total cycle time, and health indicators.
 
-## Persistance Options
+## Testing
 
-### PostgreSQL
-
-The same PostgreSQL schema that houses the device metadata can be used to persist the incoming and transformed data. Only reccomended for small deployments.
-
-### Delta Lake
-
-Object storage can be used for larger deployments. This is the cheapest option per GB for storage. The Hive metastore allows you to query this backend as a database using SQL.
-
-## Spark Applications
-
-### Streaming
-
-Streaming applications ingest data from Kafka into persistant storage using Spark structured-streaming. There is a partition in Kafka by sequence id that the consumer takes advantage of.
-
-### Batch
-
-Batch applications implement incremental data processing. Any devices with test sequences that have been updated within the look-back window are processed by the Spark engine.
-
-There is also a maintance job (for Delta storage only) for vacuum and compaction operations.
+- `unit` - unit tests are for transformations against static data files.
+- `integration` - integration tests are for data source and sink connectors.
+- `system` - system tests are for applications against realistic data sources and sinks.
 
 ## Deployment
 
@@ -54,7 +20,7 @@ You can opt for leveraging a managed service (GCP Dataproc, AWS EMR, Databricks,
 
 ### Helm Chart
 
-This chart packages all of the Spark applications into one distribution. The streaming jobs are deployed as `SparkApplication` and batch jobs as `ScheduledSparkApplication`.
+This chart packages all of the Spark applications into one distribution.
 
 See the [chart documentation](LINKHERE) for a list of the available configuration variables.
 
@@ -64,12 +30,6 @@ See the [chart documentation](LINKHERE) for a list of the available configuratio
 
 You can deploy yourself using [Strimzi operator](https://github.com/strimzi/strimzi-kafka-operator) or use a managed service with compatible API (reccomended).
 
-#### PostgreSQL
-
-You can deploy yourself using [cloudnative-pg operator](https://github.com/cloudnative-pg/cloudnative-pg) or use a managed service (reccomended).
-
 #### Object Storage
 
 You can deploy yourself using [Minio operator](https://github.com/minio/operator) or use a managed service (reccomended).
-
-*Only required for Delta Lake configuration.*
