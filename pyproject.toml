@@ -115,7 +115,4 @@ exclude_also = [
 ignore_errors = true
 
 [tool.coverage.run]
-omit = [
-    # Workflows are not tested
-    "*/workflows/*"
-]
+omit = []
