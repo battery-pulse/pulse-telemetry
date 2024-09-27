@@ -3,7 +3,7 @@ import pyspark.sql.types as T
 timeseries_schema = T.StructType(
     [
         T.StructField("device_id", dataType=T.StringType(), nullable=False),
-        T.StructField("test_id", dataType=T.LongType(), nullable=True),
+        T.StructField("test_id", dataType=T.StringType(), nullable=False),
         T.StructField("cycle_number", dataType=T.IntegerType(), nullable=False),
         T.StructField("step_type", dataType=T.StringType(), nullable=True),
         T.StructField("step_id", dataType=T.IntegerType(), nullable=True),
