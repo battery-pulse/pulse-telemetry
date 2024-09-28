@@ -1,5 +1,3 @@
-
-
 def main(variable: str):
     spark = (  # noqa: F841
     )
