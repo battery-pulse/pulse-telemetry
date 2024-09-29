@@ -2,9 +2,11 @@ import pyspark.sql.types as T
 
 statistics_cycle_schema = T.StructType(
     [
+        # Identifiers
         T.StructField("device_id", dataType=T.StringType(), nullable=False),
         T.StructField("test_id", dataType=T.StringType(), nullable=False),
         T.StructField("cycle_number", dataType=T.IntegerType(), nullable=False),
+        # Time
         T.StructField("start_time", dataType=T.TimestampType(), nullable=False),
         T.StructField("end_time", dataType=T.TimestampType(), nullable=False),
         # Current
@@ -22,11 +24,12 @@ statistics_cycle_schema = T.StructType(
         T.StructField("min_abs_power__W", dataType=T.DoubleType(), nullable=False),
         T.StructField("max_power__W", dataType=T.DoubleType(), nullable=False),
         T.StructField("max_abs_power__W", dataType=T.DoubleType(), nullable=False),
-        # Other
+        # Accumulations (within the cycle)
         T.StructField("charge_capacity__Ah", dataType=T.DoubleType(), nullable=False),
         T.StructField("discharge_capacity__Ah", dataType=T.DoubleType(), nullable=False),
         T.StructField("charge_energy__Wh", dataType=T.DoubleType(), nullable=False),
         T.StructField("discharge_energy__Wh", dataType=T.DoubleType(), nullable=False),
+        # Metadata
         T.StructField("update_ts", dataType=T.TimestampType(), nullable=False),
     ]
 )
