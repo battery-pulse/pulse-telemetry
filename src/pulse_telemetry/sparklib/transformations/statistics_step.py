@@ -54,7 +54,28 @@ statistics_step_schema = T.StructType(
 )
 
 
-def statistics_step(df: DataFrame):  # expects timeseries schema
+def statistics_step(df: DataFrame):
+    """Returns step-level statistics of the timeseries data.
+
+    Parameters
+    ----------
+    df : DataFrame
+        PySpark DataFrame with the "timeseries" schema.
+
+    Returns
+    -------
+    DataFrame
+        Aggregated statistics at the step level.
+
+    Notes
+    -----
+    Can be applied in both batch and streaming contexts, but it is reccomended to always run a
+    batch job to finalize late data. In streaming mode, use a watermark to limit in-memory state:
+
+    ```
+    df = df.withWatermark("update_ts", "14 days")
+    ```
+    """
     return df.groupBy(
         "device_id",
         "test_id",
