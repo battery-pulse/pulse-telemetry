@@ -71,10 +71,10 @@ async def timeseries_generator(
         # Updates telemetry
         match state["step_type"]:
             case "Charge":
-                new_current = -current
+                new_current = current
                 new_voltage = state["voltage__V"] + voltage_delta
             case "Discharge":
-                new_current = current
+                new_current = -current
                 new_voltage = state["voltage__V"] - voltage_delta
             case "Rest":
                 new_current = 0.0

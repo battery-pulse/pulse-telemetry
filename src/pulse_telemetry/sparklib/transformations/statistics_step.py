@@ -109,11 +109,11 @@ def statistics_step(df: "DataFrame") -> "DataFrame":
         F.max("power__W").alias("max_power__W"),
         F.max(F.abs("power__W")).alias("max_abs_power__W"),
         F.avg("power__W").alias("mean_power__W"),
-        # Accumulations (within the step) - charging is negative current
-        F.sum(F.when(F.col("current__A") <= 0, F.col("capacity__Ah")).otherwise(0.0)).alias("charge_capacity__Ah"),
-        F.sum(F.when(F.col("current__A") > 0, F.col("capacity__Ah")).otherwise(0.0)).alias("discharge_capacity__Ah"),
-        F.sum(F.when(F.col("current__A") <= 0, F.col("energy__Wh")).otherwise(0.0)).alias("charge_energy__Wh"),
-        F.sum(F.when(F.col("current__A") > 0, F.col("energy__Wh")).otherwise(0.0)).alias("discharge_energy__Wh"),
+        # Accumulations (within the step) - discharging is negative current
+        F.sum(F.when(F.col("current__A") >= 0, F.col("capacity__Ah")).otherwise(0.0)).alias("charge_capacity__Ah"),
+        F.sum(F.when(F.col("current__A") < 0, F.col("capacity__Ah")).otherwise(0.0)).alias("discharge_capacity__Ah"),
+        F.sum(F.when(F.col("current__A") >= 0, F.col("energy__Wh")).otherwise(0.0)).alias("charge_energy__Wh"),
+        F.sum(F.when(F.col("current__A") < 0, F.col("energy__Wh")).otherwise(0.0)).alias("discharge_energy__Wh"),
         # Metadata
         F.current_timestamp().alias("update_ts"),  # Timestamp in timezone configured in Spark environment
     )

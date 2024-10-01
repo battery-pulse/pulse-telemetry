@@ -17,7 +17,7 @@ timeseries_schema = T.StructType(
             "timestamp", dataType=T.TimestampType(), nullable=False
         ),  # Timestamp when the record was recorded
         T.StructField("date", dataType=T.DateType(), nullable=False),  # Date when the data was recorded, for partions
-        T.StructField("current__A", dataType=T.DoubleType(), nullable=False),  # Instantanious current
+        T.StructField("current__A", dataType=T.DoubleType(), nullable=False),  # Instantanious current, negative is discharge
         T.StructField("voltage__V", dataType=T.DoubleType(), nullable=False),  # Instantanious voltage
         T.StructField("power__W", dataType=T.DoubleType(), nullable=False),  # Instantanious power
         T.StructField(
