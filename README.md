@@ -1,35 +1,41 @@
 # Pulse Telemetry
 
-This repository implements Spark applications for transforming raw incoming data into a set of schemas for analysis. You can extend these schemas by deploying additional Spark applications.
+Welcome to the Pulse Telemetry repository. This project contains Spark applications designed to transform raw telemetry data into a series of structured schemas for comprehensive analysis. The flexible architecture allows for easy extension—developers can deploy additional Spark applications to create new schemas or enhance existing ones to meet evolving analytical needs.
 
-## Transformed Data
+## Schema Overview
 
 - `timeseries` - Common schema for individual telemetry records from the battery.
 - `statistics_steps` - Aggregates data at the charge/discharge step level, providing statistics such as average voltage, maximum current, total energy, and average temperature.
 - `statistics_cycles` - Aggregates data over full cycles of charge and discharge, including summaries like total energy discharged, total cycle time, and health indicators.
 
-## Testing
+## Developer Notes
 
-- `unit` - unit tests are for transformations against static data files.
-- `integration` - integration tests are for data source and sink connectors.
-- `system` - system tests are for applications against realistic data sources and sinks.
+### Reservation of Window Functions to Preprocessing
 
-## Deployment
+- **Window Function Usage**: Window functions, such as `lead()` and `lag()`, significantly increase the size of state within a Spark application, which can lead to increased memory usage and complexity, especially in streaming contexts. To mitigate these issues, we have made a conscious decision to limit the use of window functions to preprocessing steps only, which are closer to the source systems.
 
-You can opt for leveraging a managed service (GCP Dataproc, AWS EMR, Databricks, etc.) for deploying the Spark applications or use the provided helm chart. The provided helm chart leverages the [Spark Operator](https://github.com/kubeflow/spark-operator).
+- **Transformed Schema Design**: In our design, the transformed schemas are constructed in such a way that all necessary calculations involving window functions are performed during the preprocessing stage, ensuring that downstream transformations do not need to re-evaluate window-based metrics like `timeseries.duration__s`. By doing so, we eliminate the need for managing large states during subsequent transformations, leading to simpler and more efficient Spark jobs.
 
-### Helm Chart
+- **Trade-off and Data Quality**: We acknowledge that this design introduces a trade-off: errors due to late-arriving data during preprocessing will propagate down the pipeline. This may affect the accuracy of derived metrics if late data modifies the computed `timeseries.duration__s`. However, we believe that the benefits of reduced complexity, improved performance, and lower memory usage outweigh the potential risks.
 
-This chart packages all of the Spark applications into one distribution.
+- **Error Management and Monitoring**: To minimize the impact of late data, we are implementing both streaming and batch jobs as part of a lambda architecture. This approach offers the best of both worlds between timeliness and correctness of the data. Users are encouraged to deploy only the batch jobs, unless near-real time analytics are required.
 
-See the [chart documentation](LINKHERE) for a list of the available configuration variables.
+### Unit and Integration Testing Approach
 
-### Dependencies
+The testing approach is designed to ensure the reliability and robustness of the Pulse Telemetry application:
 
-#### Kafka Broker
+- **Data Generators**:
+  - Implement mock data sources that can asynconously produce data.
+  - Used in unit, integration, and system tests; they can replicate multiple channels publishing data in parallel.
 
-You can deploy yourself using [Strimzi operator](https://github.com/strimzi/strimzi-kafka-operator) or use a managed service with compatible API (reccomended).
+- **Unit Tests**: 
+  - Focus on verifying the correctness of individual transformations. 
+  - These tests ensure that each transformation works as expected in isolation.
 
-#### Object Storage
+- **Integration Tests**: 
+  - Validate the proper functioning of data source and sink connectors.
+  - These tests ensure that the application can correctly connect to, read from, and write to external systems.
 
-You can deploy yourself using [Minio operator](https://github.com/minio/operator) or use a managed service (reccomended).
+- **System Tests**: 
+  - Test the complete applications against realistic data sources and sinks.
+  - These tests provide an end-to-end validation of the system in a near-production environment to ensure that all components work together seamlessly under realistic conditions.
