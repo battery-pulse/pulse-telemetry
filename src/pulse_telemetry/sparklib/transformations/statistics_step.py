@@ -23,10 +23,10 @@ statistics_step_schema = T.StructType(
         # Current
         T.StructField("start_current__A", dataType=T.DoubleType(), nullable=False),  # Current at the start of the step
         T.StructField("end_current__A", dataType=T.DoubleType(), nullable=False),  # Current at the end of the step
-        T.StructField("min_charge_current__A", dataType=T.DoubleType(), nullable=False),  # Smallest current in charge state
-        T.StructField("min_discharge_current__A", dataType=T.DoubleType(), nullable=False),  # Smallest current in discharge state
-        T.StructField("max_charge_current__A", dataType=T.DoubleType(), nullable=False),  # Largest current in charge state
-        T.StructField("max_discharge_current__A", dataType=T.DoubleType(), nullable=False),  # Largest current in discharge state
+        T.StructField("min_charge_current__A", dataType=T.DoubleType(), nullable=True),  # Smallest current in charge state
+        T.StructField("min_discharge_current__A", dataType=T.DoubleType(), nullable=True),  # Smallest current in discharge state
+        T.StructField("max_charge_current__A", dataType=T.DoubleType(), nullable=True),  # Largest current in charge state
+        T.StructField("max_discharge_current__A", dataType=T.DoubleType(), nullable=True),  # Largest current in discharge state
         T.StructField("time_averaged_current__A", dataType=T.DoubleType(), nullable=False),  # Average current over the step
         # Voltage
         T.StructField("start_voltage__V", dataType=T.DoubleType(), nullable=False),  # Voltage at the start of the step
@@ -37,10 +37,10 @@ statistics_step_schema = T.StructType(
         # Power
         T.StructField("start_power__W", dataType=T.DoubleType(), nullable=False),  # Power at the start of the step
         T.StructField("end_power__W", dataType=T.DoubleType(), nullable=False),  # Power at the end of the step
-        T.StructField("min_charge_power__W", dataType=T.DoubleType(), nullable=False),  # Smallest power in the charge state
-        T.StructField("min_discharge_power__W", dataType=T.DoubleType(), nullable=False),  # Smallest power in the discharge state
-        T.StructField("max_charge_power__W", dataType=T.DoubleType(), nullable=False),  # Largest power in the charge state
-        T.StructField("max_discharge_power__W", dataType=T.DoubleType(), nullable=False),  # Largest power in the discharge state
+        T.StructField("min_charge_power__W", dataType=T.DoubleType(), nullable=True),  # Smallest power in the charge state
+        T.StructField("min_discharge_power__W", dataType=T.DoubleType(), nullable=True),  # Smallest power in the discharge state
+        T.StructField("max_charge_power__W", dataType=T.DoubleType(), nullable=True),  # Largest power in the charge state
+        T.StructField("max_discharge_power__W", dataType=T.DoubleType(), nullable=True),  # Largest power in the discharge state
         T.StructField("time_averaged_power__W", dataType=T.DoubleType(), nullable=False),  # Average power over the step
         # Accumulations (within the step)
         T.StructField("charge_capacity__Ah", dataType=T.DoubleType(), nullable=False),  # Unsigned capacity charged over the step

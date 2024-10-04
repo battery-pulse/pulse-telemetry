@@ -17,8 +17,17 @@ class TimeseriesState(TypedDict):
     current__A: float
     voltage__V: float
     power__W: float
-    capacity__Ah: float
-    energy__Wh: float
+    duration__s: float
+    voltage_delta__V: float
+    current_delta__A: float
+    capacity_charged__Ah: float
+    capacity_discharged__Ah: float
+    differential_capacity_charged__Ah_V: float
+    differential_capacity_discharged__Ah_V: float
+    step_capacity_charged__Ah: float
+    step_capacity_discharged__Ah: float
+    step_energy_charged__Wh: float
+    step_energy_discharged__Wh: float
     auxiliary: dict[str, float]
     metadata: str
     update_ts: str
@@ -45,17 +54,32 @@ async def timeseries_generator(
         "current__A": 0.0,
         "voltage__V": lower_voltage_limit,
         "power__W": 0.0,
-        "capacity__Ah": 0.0,
-        "energy__Wh": 0.0,
+        "duration__s": 0.0,
+        "voltage_delta__V": 0.0,
+        "current_delta__A": 0.0,
+        "capacity_charged__Ah": 0.0,
+        "capacity_discharged__Ah": 0.0,
+        "differential_capacity_charged__Ah_V": 0.0,
+        "differential_capacity_discharged__Ah_V": 0.0,
+        "step_capacity_charged__Ah": 0.0,
+        "step_capacity_discharged__Ah": 0.0,
+        "step_energy_charged__Wh": 0.0,
+        "step_energy_discharged__Wh": 0.0,
         "auxiliary": {"temperature": 25.0},
         "metadata": '{"experiment": "testing"}',
         "update_ts": datetime.datetime.now(datetime.timezone.utc).isoformat(),
     }
+    
     step_record_number = 0  # internal state, used to determine step transitions
     voltage_delta = (upper_voltage_limit - lower_voltage_limit) / points_per_step
     capacity_energy_factor = 1.0 / aquisition_frequency / 3600
 
     while True:
+
+        previous_timestamp = datetime.datetime.fromisoformat(state["timestamp"])
+        previous_voltage = state["voltage__V"]
+        previous_current = state["current__A"]
+
         # Updates time and record indexing
         new_time = datetime.datetime.now(datetime.timezone.utc)
         state.update(
@@ -66,26 +90,61 @@ async def timeseries_generator(
                 "record_number": state["record_number"] + 1,
             }
         )
-        step_record_number += 1  # Used for step transitions
+        step_record_number += 1
 
         # Updates telemetry
         match state["step_type"]:
             case "Charge":
                 new_current = current
                 new_voltage = state["voltage__V"] + voltage_delta
+                capacity_charged = abs(new_current * capacity_energy_factor)
+                capacity_discharged = 0.0
+                energy_charged = abs(new_current * new_voltage * capacity_energy_factor)
+                energy_discharged = 0.0
             case "Discharge":
                 new_current = -current
                 new_voltage = state["voltage__V"] - voltage_delta
+                capacity_charged = 0.0
+                capacity_discharged = abs(new_current * capacity_energy_factor)
+                energy_charged = 0.0
+                energy_discharged = abs(new_current * new_voltage * capacity_energy_factor)
             case "Rest":
                 new_current = 0.0
                 new_voltage = state["voltage__V"]
+                capacity_charged = 0.0
+                capacity_discharged = 0.0
+                energy_charged = 0.0
+                energy_discharged = 0.0
+
+        # Calculate deltas
+        voltage_delta_val = new_voltage - previous_voltage
+        current_delta_val = new_current - previous_current
+
+        # Calculate differential capacities (dQ/dV) for charge and discharge
+        differential_capacity_charged = (
+            capacity_charged / voltage_delta_val if voltage_delta_val != 0 else 0.0
+        )
+        differential_capacity_discharged = (
+            capacity_discharged / voltage_delta_val if voltage_delta_val != 0 else 0.0
+        )
+
+        # Accumulate step-level values
         state.update(
             {
                 "current__A": new_current,
                 "voltage__V": new_voltage,
                 "power__W": new_current * new_voltage,
-                "capacity__Ah": new_current * capacity_energy_factor,
-                "energy__Wh": new_current * new_voltage * capacity_energy_factor,
+                "duration__s": (new_time - previous_timestamp).total_seconds(),
+                "voltage_delta__V": voltage_delta_val,
+                "current_delta__A": current_delta_val,
+                "capacity_charged__Ah": capacity_charged,
+                "capacity_discharged__Ah": capacity_discharged,
+                "differential_capacity_charged__Ah_V": differential_capacity_charged,
+                "differential_capacity_discharged__Ah_V": differential_capacity_discharged,
+                "step_capacity_charged__Ah": state["step_capacity_charged__Ah"] + capacity_charged,
+                "step_capacity_discharged__Ah": state["step_capacity_discharged__Ah"] + capacity_discharged,
+                "step_energy_charged__Wh": state["step_energy_charged__Wh"] + energy_charged,
+                "step_energy_discharged__Wh": state["step_energy_discharged__Wh"] + energy_discharged,
             }
         )
 
