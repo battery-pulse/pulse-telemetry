@@ -7,10 +7,6 @@ from pytest import approx
 
 
 def test_schema(spark_session, statistics_step_df):
-    import pprint
-
-    pprint.pprint(statistics_step_df.schema)
-    # raise Exception
     parsed_df = spark_session.createDataFrame(
         statistics_step_df.rdd, statistics_step_schema
     )  # fix nullability attributes
