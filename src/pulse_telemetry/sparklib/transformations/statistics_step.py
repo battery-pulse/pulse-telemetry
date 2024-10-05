@@ -104,7 +104,7 @@ def statistics_step(df: "DataFrame") -> "DataFrame":
         F.min("voltage__V").alias("min_voltage__V"),
         F.max("voltage__V").alias("max_voltage__V"),
         time_weighted_avg("voltage__V").alias("time_averaged_voltage__V"),
-        # Current
+        # Current (keeping sign but min is "smallest", max is "largest")
         F.min_by("current__A", "record_number").alias("start_current__A"),
         F.max_by("current__A", "record_number").alias("end_current__A"),
         F.min(F.when(F.col("current__A") > 0, F.col("current__A"))).alias("min_charge_current__A"),
@@ -112,7 +112,7 @@ def statistics_step(df: "DataFrame") -> "DataFrame":
         F.max(F.when(F.col("current__A") > 0, F.col("current__A"))).alias("max_charge_current__A"),
         F.min(F.when(F.col("current__A") < 0, F.col("current__A"))).alias("max_discharge_current__A"),
         time_weighted_avg("current__A").alias("time_averaged_current__A"),
-        # Power
+        # Power (keeping sign but min is "smallest", max is "largest")
         F.min_by("power__W", "record_number").alias("start_power__W"),
         F.max_by("power__W", "record_number").alias("end_power__W"),
         F.min(F.when(F.col("power__W") > 0, F.col("power__W"))).alias("min_charge_power__W"),
@@ -120,7 +120,7 @@ def statistics_step(df: "DataFrame") -> "DataFrame":
         F.max(F.when(F.col("power__W") > 0, F.col("power__W"))).alias("max_charge_power__W"),
         F.min(F.when(F.col("power__W") < 0, F.col("power__W"))).alias("max_discharge_power__W"),
         time_weighted_avg("power__W").alias("time_averaged_power__W"),
-        # Accumulations (within the step)
+        # Accumulations (within the step, and remember step capacity/energy is unsigned)
         F.max_by("step_capacity_charged__Ah", "record_number").alias("charge_capacity__Ah"),
         F.max_by("step_capacity_discharged__Ah", "record_number").alias("discharge_capacity__Ah"),
         F.max_by("step_energy_charged__Wh", "record_number").alias("charge_energy__Wh"),
