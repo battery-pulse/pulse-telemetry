@@ -44,7 +44,7 @@ statistics_step_schema = T.StructType(
         T.StructField("time_averaged_power__W", dataType=T.DoubleType(), nullable=False),  # Average power over the step
         # Accumulations (unsigned)
         T.StructField("charge_capacity__Ah", dataType=T.DoubleType(), nullable=False),  # Unsigned capacity charged over the step
-        T.StructField("discharge_capacity__Ah", dataType=T.DoubleType(), nullable=False),  # Unishged capacity discharged over the step
+        T.StructField("discharge_capacity__Ah", dataType=T.DoubleType(), nullable=False),  # Unsigned capacity discharged over the step
         T.StructField("charge_energy__Wh", dataType=T.DoubleType(), nullable=False),  # Unsigned energy charged over the step
         T.StructField("discharge_energy__Wh", dataType=T.DoubleType(), nullable=False),  # Unsigned energy discharged over the step
         # Resolution diagnostics (unsigned)
