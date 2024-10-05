@@ -139,6 +139,8 @@ def test_aggregations(statistics_step_df):
 
 
 def test_null_handling(spark_session):
+    # Define nullable fields
+    nullable_fields = [field.name for field in statistics_step_schema.fields if field.nullable]
     # Validates all null rows
     nulled_timeseries = spark_session.createDataFrame(
         [
@@ -152,23 +154,23 @@ def test_null_handling(spark_session):
                 record_number=1,
                 timestamp=datetime.datetime.now(datetime.timezone.utc),
                 date=datetime.datetime.now(datetime.timezone.utc).date(),
-                voltage__V=3.7,
-                current__A=0.5,
-                power__W=1.85,
-                duration__s=1.0,
-                voltage_delta__V=0.01,
-                current_delta__A=0.02,
-                capacity_charged__Ah=0.005,
+                voltage__V=0.0,
+                current__A=0.0,
+                power__W=0.0,
+                duration__s=0.0,
+                voltage_delta__V=0.0,
+                current_delta__A=0.0,
+                capacity_charged__Ah=0.0,
                 capacity_discharged__Ah=0.0,
-                differential_capacity_charged__Ah_V=0.005 / 0.01,
-                differential_capacity_discharged__Ah_V=0.0,
+                differential_capacity_charged__Ah_V=None,
+                differential_capacity_discharged__Ah_V=None,
                 step_duration__s=0.0,
-                step_capacity_charged__Ah=0.1,
+                step_capacity_charged__Ah=0.0,
                 step_capacity_discharged__Ah=0.0,
-                step_energy_charged__Wh=0.2,
+                step_energy_charged__Wh=0.0,
                 step_energy_discharged__Wh=0.0,
-                auxiliary={"temperature": 25.0},
-                metadata="{'key': 'value'}",
+                auxiliary=None,
+                metadata=None,
                 update_ts=datetime.datetime.now(datetime.timezone.utc),
             ),
         ],
@@ -176,8 +178,8 @@ def test_null_handling(spark_session):
     )
     nulled_statistics_step_df = statistics_step(nulled_timeseries)
     record = nulled_statistics_step_df.collect()[0]
-    assert record.step_type is None, "step_type should be null if not present in input."
-    assert record.step_id is None, "step_id should be null if not present in input."
+    for field in nullable_fields:
+        assert getattr(record, field) is None, f"{field} should be null if not present in input."
 
     # Validates mixed nulls
     nulled_timeseries = spark_session.createDataFrame(
@@ -192,22 +194,22 @@ def test_null_handling(spark_session):
                 record_number=1,
                 timestamp=datetime.datetime.now(datetime.timezone.utc),
                 date=datetime.datetime.now(datetime.timezone.utc).date(),
-                voltage__V=3.7,
-                current__A=0.5,
-                power__W=1.85,
-                duration__s=1.0,
-                voltage_delta__V=0.01,
-                current_delta__A=0.02,
-                capacity_charged__Ah=0.005,
+                voltage__V=0.0,
+                current__A=0.0,
+                power__W=0.0,
+                duration__s=0.0,
+                voltage_delta__V=0.0,
+                current_delta__A=0.0,
+                capacity_charged__Ah=0.0,
                 capacity_discharged__Ah=0.0,
                 differential_capacity_charged__Ah_V=None,
                 differential_capacity_discharged__Ah_V=None,
                 step_duration__s=0.0,
-                step_capacity_charged__Ah=0.1,
+                step_capacity_charged__Ah=0.0,
                 step_capacity_discharged__Ah=0.0,
-                step_energy_charged__Wh=0.2,
+                step_energy_charged__Wh=0.0,
                 step_energy_discharged__Wh=0.0,
-                auxiliary={"temperature": 25.0},
+                auxiliary=None,
                 metadata=None,
                 update_ts=datetime.datetime.now(datetime.timezone.utc),
             ),
@@ -216,28 +218,57 @@ def test_null_handling(spark_session):
                 test_id="test1",
                 cycle_number=1,
                 step_number=1,
-                step_type="Rest",
+                step_type="Charge",
                 step_id=1,
-                record_number=1,
+                record_number=2,
                 timestamp=datetime.datetime.now(datetime.timezone.utc),
                 date=datetime.datetime.now(datetime.timezone.utc).date(),
-                voltage__V=3.7,
-                current__A=0.5,
-                power__W=1.85,
-                duration__s=1.0,
-                voltage_delta__V=0.01,
-                current_delta__A=0.02,
-                capacity_charged__Ah=0.005,
+                voltage__V=0.0,
+                current__A=1.0,
+                power__W=1.0,
+                duration__s=0.0,
+                voltage_delta__V=0.0,
+                current_delta__A=0.0,
+                capacity_charged__Ah=0.0,
+                capacity_discharged__Ah=0.0,
+                differential_capacity_charged__Ah_V=1.0,
+                differential_capacity_discharged__Ah_V=None,
+                step_duration__s=0.0,
+                step_capacity_charged__Ah=0.0,
+                step_capacity_discharged__Ah=0.0,
+                step_energy_charged__Wh=0.0,
+                step_energy_discharged__Wh=0.0,
+                auxiliary={"Temperature": 25.0},
+                metadata='{"cool": "wow"}',
+                update_ts=datetime.datetime.now(datetime.timezone.utc),
+            ),
+            Row(
+                device_id="A",
+                test_id="test1",
+                cycle_number=1,
+                step_number=1,
+                step_type="Charge",
+                step_id=1,
+                record_number=3,
+                timestamp=datetime.datetime.now(datetime.timezone.utc),
+                date=datetime.datetime.now(datetime.timezone.utc).date(),
+                voltage__V=0.0,
+                current__A=-1.0,
+                power__W=-1.0,
+                duration__s=0.0,
+                voltage_delta__V=0.0,
+                current_delta__A=0.0,
+                capacity_charged__Ah=0.0,
                 capacity_discharged__Ah=0.0,
                 differential_capacity_charged__Ah_V=None,
-                differential_capacity_discharged__Ah_V=None,
-                step_duration__s=0.1,
-                step_capacity_charged__Ah=0.1,
+                differential_capacity_discharged__Ah_V=-1.0,
+                step_duration__s=0.0,
+                step_capacity_charged__Ah=0.0,
                 step_capacity_discharged__Ah=0.0,
-                step_energy_charged__Wh=0.2,
+                step_energy_charged__Wh=0.0,
                 step_energy_discharged__Wh=0.0,
-                auxiliary=None,
-                metadata="{'key': 'value'}",
+                auxiliary={"Temperature": 25.0},
+                metadata='{"cool": "wow"}',
                 update_ts=datetime.datetime.now(datetime.timezone.utc),
             ),
         ],
@@ -245,10 +276,8 @@ def test_null_handling(spark_session):
     )
     nulled_statistics_step_df = statistics_step(nulled_timeseries)
     record = nulled_statistics_step_df.collect()[0]
-    assert record.step_type == "Rest", "step_type should be first non-null value."
-    assert record.step_id == 1, "step_id should be first non-null value."
-    assert record.auxiliary is not None, "Aux should be first non-null value"
-    assert record.metadata is not None, "metadata should be first non-null value"
+    for field in nullable_fields:
+        assert getattr(record, field) is not None, f"{field} should not be null."
 
 
 def test_empty_df(spark_session):

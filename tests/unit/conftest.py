@@ -1,4 +1,5 @@
 import pytest
+from pulse_telemetry.sparklib.transformations.statistics_cycle import statistics_cycle
 from pulse_telemetry.sparklib.transformations.statistics_step import statistics_step
 from pulse_telemetry.sparklib.transformations.timeseries import timeseries_schema
 from pulse_telemetry.utils import channel
@@ -37,3 +38,8 @@ def timeseries_df(spark_session) -> DataFrame:
 @pytest.fixture(scope="session")
 def statistics_step_df(timeseries_df) -> DataFrame:
     return statistics_step(timeseries_df)
+
+
+@pytest.fixture(scope="session")
+def statistics_cycle_df(statistics_step_df) -> DataFrame:
+    return statistics_cycle(statistics_step_df)

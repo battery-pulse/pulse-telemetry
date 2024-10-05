@@ -49,7 +49,7 @@ statistics_step_schema = T.StructType(
         T.StructField("discharge_energy__Wh", dataType=T.DoubleType(), nullable=False),  # Unsigned energy discharged over the step
         # Resolution diagnostics (unsigned)
         T.StructField("max_voltage_delta__V", dataType=T.DoubleType(), nullable=False),  # Largest change in voltage (of a single record) over the step
-        T.StructField("max_current_delta__V", dataType=T.DoubleType(), nullable=False),  # Largest change in current (of a single record) over the step
+        T.StructField("max_current_delta__A", dataType=T.DoubleType(), nullable=False),  # Largest change in current (of a single record) over the step
         T.StructField("max_duration__s", dataType=T.DoubleType(), nullable=False),  # Largest change in time (of a single record) over the step
         T.StructField("num_records", dataType=T.LongType(), nullable=False),  # Number of records over the step
         # Auxiliary metrics
