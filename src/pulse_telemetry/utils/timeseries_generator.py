@@ -69,13 +69,12 @@ async def timeseries_generator(
         "metadata": '{"experiment": "testing"}',
         "update_ts": datetime.datetime.now(datetime.timezone.utc).isoformat(),
     }
-    
+
     step_record_number = 0  # internal state, used to determine step transitions
     voltage_delta = (upper_voltage_limit - lower_voltage_limit) / points_per_step
     capacity_energy_factor = 1.0 / aquisition_frequency / 3600
 
     while True:
-
         previous_timestamp = datetime.datetime.fromisoformat(state["timestamp"])
         previous_voltage = state["voltage__V"]
         previous_current = state["current__A"]
@@ -121,12 +120,8 @@ async def timeseries_generator(
         current_delta_val = new_current - previous_current
 
         # Calculate differential capacities (dQ/dV) for charge and discharge
-        differential_capacity_charged = (
-            capacity_charged / voltage_delta_val if voltage_delta_val != 0 else 0.0
-        )
-        differential_capacity_discharged = (
-            capacity_discharged / voltage_delta_val if voltage_delta_val != 0 else 0.0
-        )
+        differential_capacity_charged = capacity_charged / voltage_delta_val if voltage_delta_val != 0 else None
+        differential_capacity_discharged = capacity_discharged / voltage_delta_val if voltage_delta_val != 0 else None
 
         # Accumulate step-level values
         state.update(
@@ -181,5 +176,9 @@ async def timeseries_generator(
                         }
                     )
             step_record_number = 0
+            state["step_capacity_charged__Ah"] = 0
+            state["step_capacity_discharged__Ah"] = 0
+            state["step_energy_charged__Wh"] = 0
+            state["step_energy_discharged__Wh"] = 0
         else:
             continue

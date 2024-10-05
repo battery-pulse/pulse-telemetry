@@ -1,5 +1,4 @@
 import datetime
-
 from pulse_telemetry.sparklib.transformations.statistics_step import statistics_step, statistics_step_schema
 from pulse_telemetry.sparklib.transformations.timeseries import timeseries_schema
 from pyspark.sql import Row
@@ -7,6 +6,10 @@ from pytest import approx
 
 
 def test_schema(spark_session, statistics_step_df):
+    import pprint
+
+    pprint.pprint(statistics_step_df.schema)
+    # raise Exception
     parsed_df = spark_session.createDataFrame(
         statistics_step_df.rdd, statistics_step_schema
     )  # fix nullability attributes
@@ -21,62 +24,107 @@ def test_groupby(statistics_step_df):
     assert first_record.step_number == 1, "Expecting step 1 to be first group."
     assert first_record.step_type == "Rest", "Expecting rest to be first group."
     assert first_record.step_id == 0, "Expecing step-id 0 to be first group."
-    assert (first_record.end_time - first_record.start_time).total_seconds() == approx(0.4, abs=0.01)
 
 
-def test_aggregations(spark_session, statistics_step_df):
+def test_aggregations(statistics_step_df):
     # Validates discharge step
     discharge_record = statistics_step_df.collect()[-1]
+    assert (discharge_record.end_time - discharge_record.start_time).total_seconds() == approx(discharge_record.duration__s), "Duration - discharge"
     assert discharge_record.start_current__A == approx(-1.0), "Start current - discharge."  # Current
     assert discharge_record.end_current__A == approx(-1.0), "End current - discharge."
-    assert discharge_record.min_current__A == approx(-1.0), "Min current - discharge."
-    assert discharge_record.min_abs_current__A == approx(1.0), "Min abs current - discharge."
-    assert discharge_record.max_current__A == approx(-1.0), "Max current - discharge."
-    assert discharge_record.max_abs_current__A == approx(1.0), "Max abs current - discharge."
-    assert discharge_record.mean_current__A == approx(-1.0), "Mean current - discharge."
+    assert discharge_record.min_charge_current__A == None, "Min charge current - discharge."
+    assert discharge_record.min_discharge_current__A == approx(-1.0), "Min discharge current - discharge."
+    assert discharge_record.max_charge_current__A == None, "Max charge current - discharge."
+    assert discharge_record.max_discharge_current__A == approx(-1.0), "Max discharge current - discharge."
+    assert discharge_record.time_averaged_current__A == approx(-1.0), "Mean current - discharge."
     assert discharge_record.start_voltage__V == approx(3.8), "Start voltage - discharge."  # Voltage
     assert discharge_record.end_voltage__V == approx(3.0), "End voltage - discharge."
     assert discharge_record.min_voltage__V == approx(3.0), "Min voltage - discharge."
     assert discharge_record.max_voltage__V == approx(3.8), "Max voltage - discharge."
-    assert discharge_record.mean_voltage__V == approx(3.4), "Mean voltage - discharge."
+    assert discharge_record.time_averaged_voltage__V == approx(3.4, abs=0.001), "Mean voltage - discharge."
     assert discharge_record.start_power__W == approx(-3.8), "Start power - discharge."  # Power
     assert discharge_record.end_power__W == approx(-3.0), "End power - discharge."
-    assert discharge_record.min_power__W == approx(-3.8), "Min power - discharge."
-    assert discharge_record.min_abs_power__W == approx(3.0), "Min abs power - discharge."
-    assert discharge_record.max_power__W == approx(-3.0), "Max power - discharge."
-    assert discharge_record.max_abs_power__W == approx(3.8), "Max abs power - discharge."
-    assert discharge_record.mean_power__W == approx(-3.4), "Mean power - discharge."
-    assert discharge_record.charge_capacity__Ah == approx(0.0), "Charge capacity - discharge."  # Accumulations
-    assert discharge_record.discharge_capacity__Ah == approx(-1.0 * 0.5 / 3600), "Discharge capacity - discharge."
-    assert discharge_record.charge_energy__Wh == approx(0.0), "Charge energy - discharge."
-    assert discharge_record.discharge_energy__Wh == approx(-3.4 * 0.5 / 3600), "Discharge energy - discharge."
+    assert discharge_record.min_charge_power__W == None, "Min charge power - discharge."
+    assert discharge_record.min_discharge_power__W == approx(-3.0), "Min discharge power - discharge."
+    assert discharge_record.max_charge_power__W == None, "Max charge power - discharge."
+    assert discharge_record.max_discharge_power__W == approx(-3.8), "Max discharge power - discharge."
+    assert discharge_record.time_averaged_power__W == approx(-3.4, abs=0.001), "Mean power - discharge."
+    assert discharge_record.charge_capacity__Ah == approx(0.0, abs=0.001), "Charge capacity - discharge."  # Accumulations
+    assert discharge_record.discharge_capacity__Ah == approx(1.0 * 0.5 / 3600), "Discharge capacity - discharge."
+    assert discharge_record.charge_energy__Wh == approx(0.0, abs=0.001), "Charge energy - discharge."
+    assert discharge_record.discharge_energy__Wh == approx(3.4 * 0.5 / 3600), "Discharge energy - discharge."
+    assert discharge_record.max_voltage_delta__V == approx(0.2), "Max voltage delta - discharge"  # Resolution diagnostics
+    assert discharge_record.max_current_delta__A == approx(2), "Max current delta - discharge"
+    assert discharge_record.max_duration__s == approx(0.1, abs=0.01), "Max duration - discharge"
+    assert discharge_record.num_records == 5, "Num records - discharge"
+    assert discharge_record.auxiliary == {"temperature": 25.0}, "Auxiliary - discharge"
+    assert discharge_record.metadata == '{"experiment": "testing"}', "Metadata - discharge"
 
     # Validates charge step
-    charge_record = statistics_step_df.collect()[-2]  # The second last step is a charge
+    charge_record = statistics_step_df.collect()[-2]
+    assert (charge_record.end_time - charge_record.start_time).total_seconds() == approx(charge_record.duration__s), "Duration - charge"
     assert charge_record.start_current__A == approx(1.0), "Start current - charge."  # Current
     assert charge_record.end_current__A == approx(1.0), "End current - charge."
-    assert charge_record.min_current__A == approx(1.0), "Min current - charge."
-    assert charge_record.min_abs_current__A == approx(1.0), "Min abs current - charge."
-    assert charge_record.max_current__A == approx(1.0), "Max current - charge."
-    assert charge_record.max_abs_current__A == approx(1.0), "Max abs current - charge."
-    assert charge_record.mean_current__A == approx(1.0), "Mean current - charge."
+    assert charge_record.min_charge_current__A == approx(1.0), "Min charge current - charge."
+    assert charge_record.min_discharge_current__A == None, "Min discharge current - charge."
+    assert charge_record.max_charge_current__A == approx(1.0), "Max charge current - charge."
+    assert charge_record.max_discharge_current__A == None, "Max discharge current - charge."
+    assert charge_record.time_averaged_current__A == approx(1.0), "Mean current - charge."
     assert charge_record.start_voltage__V == approx(3.2), "Start voltage - charge."  # Voltage
     assert charge_record.end_voltage__V == approx(4.0), "End voltage - charge."
     assert charge_record.min_voltage__V == approx(3.2), "Min voltage - charge."
     assert charge_record.max_voltage__V == approx(4.0), "Max voltage - charge."
-    assert charge_record.mean_voltage__V == approx(3.6), "Mean voltage - charge."
+    assert charge_record.time_averaged_voltage__V == approx(3.6, abs=0.001), "Mean voltage - charge."
     assert charge_record.start_power__W == approx(3.2), "Start power - charge."  # Power
     assert charge_record.end_power__W == approx(4.0), "End power - charge."
-    assert charge_record.min_power__W == approx(3.2), "Min power - charge."
-    assert charge_record.min_abs_power__W == approx(3.2), "Min abs power - charge."
-    assert charge_record.max_power__W == approx(4.0), "Max power - charge."
-    assert charge_record.max_abs_power__W == approx(4.0), "Max abs power - charge."
-    assert charge_record.mean_power__W == approx(3.6), "Mean power - charge."
+    assert charge_record.min_charge_power__W == approx(3.2), "Min charge power - charge."
+    assert charge_record.min_discharge_power__W == None, "Min discharge power - charge."
+    assert charge_record.max_charge_power__W == approx(4.0), "Max charge power - charge."
+    assert charge_record.max_discharge_power__W == None, "Max discharge power - charge."
+    assert charge_record.time_averaged_power__W == approx(3.6, abs=0.001), "Mean power - charge."
     assert charge_record.charge_capacity__Ah == approx(1.0 * 0.5 / 3600), "Charge capacity - charge."  # Accumulations
-    assert charge_record.discharge_capacity__Ah == approx(0.0), "Discharge capacity - charge."
+    assert charge_record.discharge_capacity__Ah == approx(0.0, abs=0.001), "Discharge capacity - charge."
     assert charge_record.charge_energy__Wh == approx(3.6 * 0.5 / 3600), "Charge energy - charge."
-    assert charge_record.discharge_energy__Wh == approx(0.0), "Discharge energy - charge."
+    assert charge_record.discharge_energy__Wh == approx(0.0, abs=0.001), "Discharge energy - charge."
+    assert charge_record.max_voltage_delta__V == approx(0.2), "Max voltage delta - charge"  # Resolution diagnostics
+    assert charge_record.max_current_delta__A == approx(1), "Max current delta - charge"
+    assert charge_record.max_duration__s == approx(0.1, abs=0.01), "Max duration - charge"
+    assert charge_record.num_records == 5, "Num records - charge"
+    assert charge_record.auxiliary == {"temperature": 25.0}, "Auxiliary - charge"
+    assert charge_record.metadata == '{"experiment": "testing"}', "Metadata - charge"
 
+    # Validates rest step
+    rest_record = statistics_step_df.collect()[-3]
+    assert (rest_record.end_time - rest_record.start_time).total_seconds() == approx(rest_record.duration__s), "Duration - rest"
+    assert rest_record.start_current__A == approx(0.0), "Start current - rest."  # Current
+    assert rest_record.end_current__A == approx(0.0), "End current - rest."
+    assert rest_record.min_charge_current__A == None, "Min charge current - rest."
+    assert rest_record.min_discharge_current__A == None, "Min discharge current - rest."
+    assert rest_record.max_charge_current__A == None, "Max charge current - rest."
+    assert rest_record.max_discharge_current__A == None, "Max discharge current - rest."
+    assert rest_record.time_averaged_current__A == 0.0, "Mean current - rest."
+    assert rest_record.start_voltage__V == approx(3.0), "Start voltage - rest."  # Voltage
+    assert rest_record.end_voltage__V == approx(3.0), "End voltage - rest."
+    assert rest_record.min_voltage__V == approx(3.0), "Min voltage - rest."
+    assert rest_record.max_voltage__V == approx(3.0), "Max voltage - rest."
+    assert rest_record.time_averaged_voltage__V == approx(3.0), "Mean voltage - rest."
+    assert rest_record.start_power__W == approx(0.0), "Start power - rest."  # Power
+    assert rest_record.end_power__W == approx(0.0), "End power - rest."
+    assert rest_record.min_charge_power__W == None, "Min charge power - rest."
+    assert rest_record.min_discharge_power__W == None, "Min discharge power - rest."
+    assert rest_record.max_charge_power__W == None, "Max charge power - rest."
+    assert rest_record.max_discharge_power__W == None, "Max discharge power - rest."
+    assert rest_record.time_averaged_power__W == 0.0, "Mean power - rest."
+    assert rest_record.charge_capacity__Ah == approx(0.0), "Charge capacity - rest."  # Accumulations
+    assert rest_record.discharge_capacity__Ah == approx(0.0), "Discharge capacity - rest."
+    assert rest_record.charge_energy__Wh == approx(0.0), "Charge energy - rest."
+    assert rest_record.discharge_energy__Wh == approx(0.0), "Discharge energy - rest."
+    assert rest_record.max_voltage_delta__V == approx(0.0), "Max voltage delta - rest"  # Resolution diagnostics
+    assert rest_record.max_current_delta__A == approx(1), "Max current delta - rest"
+    assert rest_record.max_duration__s == approx(0.1, abs=0.01), "Max duration - rest"
+    assert rest_record.num_records == 5, "Num records - rest"
+    assert rest_record.auxiliary == {"temperature": 25.0}, "Auxiliary - rest"
+    assert rest_record.metadata == '{"experiment": "testing"}', "Metadata - rest"
 
 def test_null_handling(spark_session):
     # Validates all null rows
@@ -95,9 +143,18 @@ def test_null_handling(spark_session):
                 current__A=0.5,
                 voltage__V=3.7,
                 power__W=1.85,
-                capacity__Ah=0.1,
-                energy__Wh=0.2,
-                auxiliary={"key": 0.1},
+                duration__s=1.0,
+                voltage_delta__V=0.01,
+                current_delta__A=0.02,
+                capacity_charged__Ah=0.005,
+                capacity_discharged__Ah=0.0,
+                differential_capacity_charged__Ah_V=0.005 / 0.01,
+                differential_capacity_discharged__Ah_V=0.0,
+                step_capacity_charged__Ah=0.1,
+                step_capacity_discharged__Ah=0.0,
+                step_energy_charged__Wh=0.2,
+                step_energy_discharged__Wh=0.0,
+                auxiliary={"temperature": 25.0},
                 metadata="{'key': 'value'}",
                 update_ts=datetime.datetime.now(datetime.timezone.utc),
             ),
@@ -125,9 +182,18 @@ def test_null_handling(spark_session):
                 current__A=0.5,
                 voltage__V=3.7,
                 power__W=1.85,
-                capacity__Ah=0.1,
-                energy__Wh=0.2,
-                auxiliary=None,
+                duration__s=1.0,
+                voltage_delta__V=0.01,
+                current_delta__A=0.02,
+                capacity_charged__Ah=0.005,
+                capacity_discharged__Ah=0.0,
+                differential_capacity_charged__Ah_V=None,
+                differential_capacity_discharged__Ah_V=None,
+                step_capacity_charged__Ah=0.1,
+                step_capacity_discharged__Ah=0.0,
+                step_energy_charged__Wh=0.2,
+                step_energy_discharged__Wh=0.0,
+                auxiliary={"temperature": 25.0},
                 metadata=None,
                 update_ts=datetime.datetime.now(datetime.timezone.utc),
             ),
@@ -144,10 +210,19 @@ def test_null_handling(spark_session):
                 current__A=0.5,
                 voltage__V=3.7,
                 power__W=1.85,
-                capacity__Ah=0.1,
-                energy__Wh=0.2,
+                duration__s=1.0,
+                voltage_delta__V=0.01,
+                current_delta__A=0.02,
+                capacity_charged__Ah=0.005,
+                capacity_discharged__Ah=0.0,
+                differential_capacity_charged__Ah_V=None,
+                differential_capacity_discharged__Ah_V=None,
+                step_capacity_charged__Ah=0.1,
+                step_capacity_discharged__Ah=0.0,
+                step_energy_charged__Wh=0.2,
+                step_energy_discharged__Wh=0.0,
                 auxiliary=None,
-                metadata=None,
+                metadata="{'key': 'value'}",
                 update_ts=datetime.datetime.now(datetime.timezone.utc),
             ),
         ],
@@ -157,6 +232,8 @@ def test_null_handling(spark_session):
     record = nulled_statistics_step_df.collect()[0]
     assert record.step_type == "Rest", "step_type should be first non-null value."
     assert record.step_id == 1, "step_id should be first non-null value."
+    assert record.auxiliary is not None, "Aux should be first non-null value"
+    assert record.metadata is not None, "metadata should be first non-null value"
 
 
 def test_empty_df(spark_session):

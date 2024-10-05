@@ -70,6 +70,8 @@ select = [
     "UP",
 ]
 ignore = [
+    # line length, use formatter to get line length approx right
+    "E501",
     # module level import not at top of file
     "E402",
     # too many branches

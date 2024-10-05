@@ -1,6 +1,5 @@
 import pyspark.sql.types as T
 
-
 timeseries_schema = T.StructType(
     [
         # Identifiers
@@ -14,7 +13,7 @@ timeseries_schema = T.StructType(
         # Instantanious quantities
         T.StructField("timestamp", dataType=T.TimestampType(), nullable=False),  # Timestamp when the record was recorded
         T.StructField("date", dataType=T.DateType(), nullable=False),  # Date when the data was recorded, for partions
-        T.StructField("current__A", dataType=T.DoubleType(), nullable=False),  # Instantanious current, negative is discharge
+        T.StructField("current__A", dataType=T.DoubleType(), nullable=False),  # Signed instantanious current, negative is discharge
         T.StructField("voltage__V", dataType=T.DoubleType(), nullable=False),  # Instantanious voltage
         T.StructField("power__W", dataType=T.DoubleType(), nullable=False),  # Signed instantanious power
         # Differential quantities
