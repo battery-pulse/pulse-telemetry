@@ -20,7 +20,13 @@ statistics_step_schema = T.StructType(
         T.StructField("start_time", dataType=T.TimestampType(), nullable=False),  # Time at the start of the step
         T.StructField("end_time", dataType=T.TimestampType(), nullable=False),  # Time at the end of the step
         T.StructField("duration__s", dataType=T.DoubleType(), nullable=False),  # Time over the step
-        # Current (signed)
+        # Voltage
+        T.StructField("start_voltage__V", dataType=T.DoubleType(), nullable=False),  # Voltage at the start of the step
+        T.StructField("end_voltage__V", dataType=T.DoubleType(), nullable=False),  # Voltage at the end of the step
+        T.StructField("min_voltage__V", dataType=T.DoubleType(), nullable=False),  # Minimum voltage over the step
+        T.StructField("max_voltage__V", dataType=T.DoubleType(), nullable=False),  # Maximum voltage over the step
+        T.StructField("time_averaged_voltage__V", dataType=T.DoubleType(), nullable=False),  # Average voltage over the step
+        # Current (signed, but min means smallest and max largest)
         T.StructField("start_current__A", dataType=T.DoubleType(), nullable=False),  # Current at the start of the step
         T.StructField("end_current__A", dataType=T.DoubleType(), nullable=False),  # Current at the end of the step
         T.StructField("min_charge_current__A", dataType=T.DoubleType(), nullable=True),  # Smallest current in charge state
@@ -28,13 +34,7 @@ statistics_step_schema = T.StructType(
         T.StructField("max_charge_current__A", dataType=T.DoubleType(), nullable=True),  # Largest current in charge state
         T.StructField("max_discharge_current__A", dataType=T.DoubleType(), nullable=True),  # Largest current in discharge state
         T.StructField("time_averaged_current__A", dataType=T.DoubleType(), nullable=False),  # Average current over the step
-        # Voltage
-        T.StructField("start_voltage__V", dataType=T.DoubleType(), nullable=False),  # Voltage at the start of the step
-        T.StructField("end_voltage__V", dataType=T.DoubleType(), nullable=False),  # Voltage at the end of the step
-        T.StructField("min_voltage__V", dataType=T.DoubleType(), nullable=False),  # Minimum voltage over the step
-        T.StructField("max_voltage__V", dataType=T.DoubleType(), nullable=False),  # Maximum voltage over the step
-        T.StructField("time_averaged_voltage__V", dataType=T.DoubleType(), nullable=False),  # Average voltage over the step
-        # Power (signed)
+        # Power (signed, but min means smallest and max largest)
         T.StructField("start_power__W", dataType=T.DoubleType(), nullable=False),  # Power at the start of the step
         T.StructField("end_power__W", dataType=T.DoubleType(), nullable=False),  # Power at the end of the step
         T.StructField("min_charge_power__W", dataType=T.DoubleType(), nullable=True),  # Smallest power in the charge state
@@ -98,6 +98,12 @@ def statistics_step(df: "DataFrame") -> "DataFrame":
             F.max_by("timestamp", "record_number").cast("double")
             - F.min_by("timestamp", "record_number").cast("double")
         ).alias("duration__s"),
+        # Voltage
+        F.min_by("voltage__V", "record_number").alias("start_voltage__V"),
+        F.max_by("voltage__V", "record_number").alias("end_voltage__V"),
+        F.min("voltage__V").alias("min_voltage__V"),
+        F.max("voltage__V").alias("max_voltage__V"),
+        time_weighted_avg("voltage__V").alias("time_averaged_voltage__V"),
         # Current
         F.min_by("current__A", "record_number").alias("start_current__A"),
         F.max_by("current__A", "record_number").alias("end_current__A"),
@@ -106,12 +112,6 @@ def statistics_step(df: "DataFrame") -> "DataFrame":
         F.max(F.when(F.col("current__A") > 0, F.col("current__A"))).alias("max_charge_current__A"),
         F.min(F.when(F.col("current__A") < 0, F.col("current__A"))).alias("max_discharge_current__A"),
         time_weighted_avg("current__A").alias("time_averaged_current__A"),
-        # Voltage
-        F.min_by("voltage__V", "record_number").alias("start_voltage__V"),
-        F.max_by("voltage__V", "record_number").alias("end_voltage__V"),
-        F.min("voltage__V").alias("min_voltage__V"),
-        F.max("voltage__V").alias("max_voltage__V"),
-        time_weighted_avg("voltage__V").alias("time_averaged_voltage__V"),
         # Power
         F.min_by("power__W", "record_number").alias("start_power__W"),
         F.max_by("power__W", "record_number").alias("end_power__W"),

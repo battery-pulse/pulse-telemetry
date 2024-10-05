@@ -9,8 +9,8 @@ class TimeseriesState(TypedDict):
     test_id: str
     cycle_number: int
     step_number: int
-    step_type: str
-    step_id: int
+    step_type: str | None
+    step_id: int | None
     record_number: int
     timestamp: str
     date: str
@@ -22,14 +22,14 @@ class TimeseriesState(TypedDict):
     current_delta__A: float
     capacity_charged__Ah: float
     capacity_discharged__Ah: float
-    differential_capacity_charged__Ah_V: float
-    differential_capacity_discharged__Ah_V: float
+    differential_capacity_charged__Ah_V: float | None
+    differential_capacity_discharged__Ah_V: float | None
     step_capacity_charged__Ah: float
     step_capacity_discharged__Ah: float
     step_energy_charged__Wh: float
     step_energy_discharged__Wh: float
-    auxiliary: dict[str, float]
-    metadata: str
+    auxiliary: dict[str, float] | None
+    metadata: str | None
     update_ts: str
 
 
