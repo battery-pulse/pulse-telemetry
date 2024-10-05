@@ -24,6 +24,7 @@ class TimeseriesState(TypedDict):
     capacity_discharged__Ah: float
     differential_capacity_charged__Ah_V: float | None
     differential_capacity_discharged__Ah_V: float | None
+    step_duration__s: float
     step_capacity_charged__Ah: float
     step_capacity_discharged__Ah: float
     step_energy_charged__Wh: float
@@ -61,6 +62,7 @@ async def timeseries_generator(
         "capacity_discharged__Ah": 0.0,
         "differential_capacity_charged__Ah_V": 0.0,
         "differential_capacity_discharged__Ah_V": 0.0,
+        "step_duration__s": 0.0,
         "step_capacity_charged__Ah": 0.0,
         "step_capacity_discharged__Ah": 0.0,
         "step_energy_charged__Wh": 0.0,
@@ -136,6 +138,7 @@ async def timeseries_generator(
                 "capacity_discharged__Ah": capacity_discharged,
                 "differential_capacity_charged__Ah_V": differential_capacity_charged,
                 "differential_capacity_discharged__Ah_V": differential_capacity_discharged,
+                "step_duration__s": state["step_duration__s"] + (new_time - previous_timestamp).total_seconds(),
                 "step_capacity_charged__Ah": state["step_capacity_charged__Ah"] + capacity_charged,
                 "step_capacity_discharged__Ah": state["step_capacity_discharged__Ah"] + capacity_discharged,
                 "step_energy_charged__Wh": state["step_energy_charged__Wh"] + energy_charged,
@@ -176,6 +179,7 @@ async def timeseries_generator(
                         }
                     )
             step_record_number = 0
+            state["step_duration__s"] = 0
             state["step_capacity_charged__Ah"] = 0
             state["step_capacity_discharged__Ah"] = 0
             state["step_energy_charged__Wh"] = 0
