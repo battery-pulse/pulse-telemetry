@@ -25,7 +25,7 @@ timeseries_schema = T.StructType(
         T.StructField("differential_capacity_charged__Ah_V", dataType=T.DoubleType(), nullable=True),  # Signed dQ/dV for charge
         T.StructField("differential_capacity_discharged__Ah_V", dataType=T.DoubleType(), nullable=True),  # Signed dQ/dV for discharge
         # Acumulated quantities
-        T.StructField("step_duration__s", dataType=T.DoubleType(), nullable=False),  # Time accumulated during the step
+        T.StructField("step_duration__s", dataType=T.DoubleType(), nullable=False),  # Time accumulated up until this point in the step
         T.StructField("step_capacity_charged__Ah", dataType=T.DoubleType(), nullable=False),  # Unsigned capacity accumulated during the step under positive current conditions
         T.StructField("step_capacity_discharged__Ah", dataType=T.DoubleType(), nullable=False),  # Unsigned capacity accumulated during the step under negative current conditions
         T.StructField("step_energy_charged__Wh", dataType=T.DoubleType(), nullable=False),  # Unsigned energy accumulated during this step under positive current conditions
