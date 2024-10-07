@@ -6,7 +6,7 @@ Welcome to the Pulse Telemetry repository. This project contains Spark applicati
 
 ### Telemetry
 
-Enhanced schema for individual records from the battery. Encompasses:
+Enhanced schema for individual records from the battery:
 - **Identifiers**: device ID, test ID, step number, etc.
 - **Instantaneous Quantities**: timestamp, voltage, power, etc., measured at each individual record.
 - **Differential Quantities**: duration, differential capacity, etc., changes between consecutive records.
@@ -15,7 +15,7 @@ Enhanced schema for individual records from the battery. Encompasses:
 
 ### Step Statistics
 
-Aggregation of telemetry data at the charge/discharge step level. Encompasses:
+Aggregation of telemetry data at the charge/discharge step level:
 - **Time**: start time, end time, and duration of the step.
 - **Instantaneous Aggregations**: minimum, maximum, start, end, etc., during the step.
 - **Step Accumulations**: total step capacity and energy.
@@ -24,34 +24,32 @@ Aggregation of telemetry data at the charge/discharge step level. Encompasses:
 
 ### Cycle Statistics
 
-Aggregation of telemetry data at the cycle level. Encompasses:
+Aggregation of telemetry data at the cycle level:
 - **Time**: start time, end time, and duration of the step.
 - **Instantaneous Aggregations**: minimum, maximum, start, end, etc., during the cycle.
-- **Step Accumulations**: total step capacity and energy.
+- **Cycle Accumulations**: total cycle capacity and energy.
 - **Data Diagnostics**: maximum voltage delta, maximum duration, etc., for diagnosing data resolution.
 - **User-Defined Data**: aggregated auxiliary measurements and metadata.
 
 
 ## Developer Notes
 
-### Reservation of Window Functions to Preprocessing
+### Reservation of Window Functions
 
 - **Window Function Usage**: Window functions, such as `lead()` and `lag()`, significantly increase the size of state within a Spark application, which can lead to increased memory usage and complexity, especially in streaming contexts. To mitigate these issues, we have made a conscious decision to limit the use of window functions to preprocessing steps only, which are closer to the source systems.
 
-- **Trade-off and Data Quality**: We acknowledge that this design introduces a trade-off: errors due to late-arriving data during preprocessing will propagate down the pipeline. This may affect the accuracy of derived metrics if late data modifies the computed fields (e.g. `timeseries.duration__s`). However, we believe that the benefits of reduced complexity, improved performance, and lower memory usage outweigh the potential risks.
+- **Trade-off and Data Quality**: We acknowledge that this design introduces a trade-off: errors due to late-arriving data during preprocessing will propagate down the pipeline. This may affect the accuracy of derived metrics if late data modifies the computed fields (e.g. `timeseries.duration__s`). However, the benefits of reduced complexity, improved performance, and lower memory usage outweigh the potential risks.
 
-### Unit and Integration Testing Approach
+### Unit and Integration Testing
 
-The testing approach is designed to ensure the reliability and robustness of the Pulse Telemetry application:
-
-- **Data Generators**:
+#### Data Generators
   - Implement mock data sources that can asynconously produce data.
   - Configurable to emit data at a desired frequency, like a series of test channels.
 
-- **Unit Tests**: 
-  - Focus on verifying the correctness of individual transformations. 
-  - These tests ensure that each transformation gives correct values over test data, handles nullability constraints and semantics correctly, operates correctly when presented with empty input data.
+#### Unit Tests 
+- Focus on verifying the correctness of individual transformations. 
+- These tests ensure that each transformation gives correct values over test data, handles nullability constraints and semantics correctly, operates correctly when presented with empty input data.
 
-- **Integration Tests**: 
-  - Validate the proper functioning of data source and sink connectors.
-  - These tests ensure that the application can connect to, read from, and write to external systems.
+#### Integration Tests
+- Validate the proper functioning of data source and sink connectors.
+- These tests ensure that the application can connect to, read from, and write to external systems.
