@@ -6,30 +6,30 @@ Welcome to the Pulse Telemetry repository. This project contains Spark applicati
 
 ### Telemetry
 
-Common schema for individual records from the battery. Encompasses:
-- **Identifiers**: Device ID, Test ID, Step Number, etc.
-- **Instantaneous Quantities**: Timestamp, Voltage, Power, etc., measured at each individual record.
-- **Differential Quantities**: Duration, Voltage Delta, Differential Capacity, etc., representing changes between consecutive records.
-- **Accumulated Quantities**: Step Duration, Step Capacity Charged, Step Energy Charged, etc., representing the total values accumulated over the step.
-- **User-Defined Data**: Auxiliary measurements (e.g., temperature) and Metadata for additional context.
+Enhanced schema for individual records from the battery. Encompasses:
+- **Identifiers**: device ID, test ID, step number, etc.
+- **Instantaneous Quantities**: timestamp, voltage, power, etc., measured at each individual record.
+- **Differential Quantities**: duration, voltage delta, differential capacity, etc., changes between consecutive records.
+- **Accumulated Quantities**: step duration, step capacity charged, etc., total values accumulated over the step.
+- **User-Defined Data**: auxiliary measurements (e.g., temperature) and metadata for additional context.
 
 ### Step Statistics
 
 Aggregation of telemetry data at the charge/discharge step level. Encompasses:
-- **Time**: Start Time, End Time, and Duration of the step.
-- **Instantaneous Aggregations**: Minimum, Maximum, Start, End, etc., for Voltage, Current, and Power during the step.
-- **Step Accumulations**: Total Step Capacity and Energy.
-- **Data Diagnostics**: Maximum Voltage Delta, Maximum Current Delta, Maximum Duration, etc., for diagnosing data resolution.
-- **User-Defined Data**: Aggregated Auxiliary Measurements and Metadata.
+- **Time**: start time, end time, and duration of the step.
+- **Instantaneous Aggregations**: minimum, maximum, start, end, etc., during the step.
+- **Step Accumulations**: total step capacity and energy.
+- **Data Diagnostics**: maximum voltage delta, maximum duration, etc., for diagnosing data resolution.
+- **User-Defined Data**: aggregated auxiliary measurements and metadata.
 
 ### Cycle Statistics
 
 Aggregation of telemetry data at the cycle level. Encompasses:
-- **Time**: Start Time, End Time, and Duration of the cycle.
-- **Instantaneous Aggregations**: Minimum, Maximum, Start, End, etc., for Voltage, Current, and Power during the cycle.
-- **Cycle Accumulations**: Total Capacity and Energy over the cycle.
-- **Data Diagnostics**: Maximum Voltage Delta, Maximum Current Delta, Maximum Duration, etc., for diagnosing data resolution.
-- **User-Defined Data**: Aggregated Auxiliary Measurements and Metadata.
+- **Time**: start time, end time, and duration of the step.
+- **Instantaneous Aggregations**: minimum, maximum, start, end, etc., during the cycle.
+- **Step Accumulations**: total step capacity and energy.
+- **Data Diagnostics**: maximum voltage delta, maximum duration, etc., for diagnosing data resolution.
+- **User-Defined Data**: aggregated auxiliary measurements and metadata.
 
 
 ## Developer Notes
