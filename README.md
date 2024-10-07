@@ -1,35 +1,55 @@
 # Pulse Telemetry
 
-This repository implements Spark applications for transforming raw incoming data into a set of schemas for analysis. You can extend these schemas by deploying additional Spark applications.
+Welcome to the Pulse Telemetry repository. This project contains Spark applications designed to transform raw telemetry data into a series of structured schemas for comprehensive analysis. The flexible architecture allows for easy extension—developers can deploy additional Spark applications to create new schemas or enhance existing ones to meet evolving analytical needs.
 
-## Transformed Data
+## Schema Overview
 
-- `timeseries` - Common schema for individual telemetry records from the battery.
-- `statistics_steps` - Aggregates data at the charge/discharge step level, providing statistics such as average voltage, maximum current, total energy, and average temperature.
-- `statistics_cycles` - Aggregates data over full cycles of charge and discharge, including summaries like total energy discharged, total cycle time, and health indicators.
+### Telemetry
 
-## Testing
+Enhanced schema for individual records from the battery:
+- **Identifiers**: device ID, test ID, step number, etc.
+- **Instantaneous Quantities**: timestamp, voltage, power, etc., measured at each individual record.
+- **Differential Quantities**: duration, differential capacity, etc., changes between consecutive records.
+- **Accumulated Quantities**: step duration, step capacity charged, etc., total values accumulated over the step.
+- **User-Defined Data**: auxiliary measurements (e.g., temperature) and metadata for additional context.
 
-- `unit` - unit tests are for transformations against static data files.
-- `integration` - integration tests are for data source and sink connectors.
-- `system` - system tests are for applications against realistic data sources and sinks.
+### Step Statistics
 
-## Deployment
+Aggregation of telemetry data at the charge/discharge step level:
+- **Time**: start time, end time, and duration of the step.
+- **Instantaneous Aggregations**: minimum, maximum, start, end, etc., during the step.
+- **Step Accumulations**: total step capacity and energy.
+- **Data Diagnostics**: maximum voltage delta, maximum duration, etc., for diagnosing data resolution.
+- **User-Defined Data**: aggregated auxiliary measurements and metadata.
 
-You can opt for leveraging a managed service (GCP Dataproc, AWS EMR, Databricks, etc.) for deploying the Spark applications or use the provided helm chart. The provided helm chart leverages the [Spark Operator](https://github.com/kubeflow/spark-operator).
+### Cycle Statistics
 
-### Helm Chart
+Aggregation of telemetry data at the cycle level:
+- **Time**: start time, end time, and duration of the step.
+- **Instantaneous Aggregations**: minimum, maximum, start, end, etc., during the cycle.
+- **Cycle Accumulations**: total cycle capacity and energy.
+- **Data Diagnostics**: maximum voltage delta, maximum duration, etc., for diagnosing data resolution.
+- **User-Defined Data**: aggregated auxiliary measurements and metadata.
 
-This chart packages all of the Spark applications into one distribution.
 
-See the [chart documentation](LINKHERE) for a list of the available configuration variables.
+## Developer Notes
 
-### Dependencies
+### Reservation of Window Functions
 
-#### Kafka Broker
+- **Window Function Usage**: Window functions, such as `lead()` and `lag()`, significantly increase the size of state within a Spark application, which can lead to increased memory usage and complexity, especially in streaming contexts. To mitigate these issues, we have made a conscious decision to limit the use of window functions to preprocessing steps only, which are closer to the source systems.
 
-You can deploy yourself using [Strimzi operator](https://github.com/strimzi/strimzi-kafka-operator) or use a managed service with compatible API (reccomended).
+- **Trade-off and Data Quality**: We acknowledge that this design introduces a trade-off: errors due to late-arriving data during preprocessing will propagate down the pipeline. This may affect the accuracy of derived metrics if late data modifies the computed fields (e.g. `timeseries.duration__s`). However, the benefits of reduced complexity, improved performance, and lower memory usage outweigh the potential risks.
 
-#### Object Storage
+### Unit and Integration Testing
 
-You can deploy yourself using [Minio operator](https://github.com/minio/operator) or use a managed service (reccomended).
+#### Data Generators
+  - Implement mock data sources that can asynconously produce data.
+  - Configurable to emit data at a desired frequency, like a series of test channels.
+
+#### Unit Tests 
+- Focus on verifying the correctness of individual transformations. 
+- These tests ensure that each transformation gives correct values over test data, handles nullability constraints and semantics correctly, operates correctly when presented with empty input data.
+
+#### Integration Tests
+- Validate the proper functioning of data source and sink connectors.
+- These tests ensure that the application can connect to, read from, and write to external systems.
