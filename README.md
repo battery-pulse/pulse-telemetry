@@ -50,10 +50,7 @@ The testing approach is designed to ensure the reliability and robustness of the
 
 - **Unit Tests**: 
   - Focus on verifying the correctness of individual transformations. 
-  - These tests ensure that each transformation: 
-    - Gives correct, expected values over test data.
-    - Handles nullability constraints and semantics correctly.
-    - Operate correctly when presented empty input data.
+  - These tests ensure that each transformation gives correct values over test data, handles nullability constraints and semantics correctly, operates correctly when presented with empty input data.
 
 - **Integration Tests**: 
   - Validate the proper functioning of data source and sink connectors.
