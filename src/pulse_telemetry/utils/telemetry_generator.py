@@ -4,7 +4,7 @@ import uuid
 from typing import TypedDict
 
 
-class TimeseriesState(TypedDict):
+class TelemetryState(TypedDict):
     device_id: str
     test_id: str
     cycle_number: int
@@ -20,6 +20,7 @@ class TimeseriesState(TypedDict):
     duration__s: float
     voltage_delta__V: float
     current_delta__A: float
+    power_delta__W: float
     capacity_charged__Ah: float
     capacity_discharged__Ah: float
     differential_capacity_charged__Ah_V: float | None
@@ -34,7 +35,7 @@ class TimeseriesState(TypedDict):
     update_ts: str
 
 
-async def timeseries_generator(
+async def telemetry_generator(
     aquisition_frequency: int,  # Hz
     points_per_step: int,
     lower_voltage_limit: float = 3.0,  # V
@@ -42,7 +43,7 @@ async def timeseries_generator(
     current: float = 1.0,  # A
 ):
     # Initializes the state
-    state: TimeseriesState = {
+    state: TelemetryState = {
         "device_id": str(uuid.uuid4()),
         "test_id": str(uuid.uuid4()),
         "cycle_number": 1,
@@ -58,6 +59,7 @@ async def timeseries_generator(
         "duration__s": 0.0,
         "voltage_delta__V": 0.0,
         "current_delta__A": 0.0,
+        "power_delta__W": 0.0,
         "capacity_charged__Ah": 0.0,
         "capacity_discharged__Ah": 0.0,
         "differential_capacity_charged__Ah_V": 0.0,
@@ -120,6 +122,7 @@ async def timeseries_generator(
         # Calculate deltas
         voltage_delta_val = new_voltage - previous_voltage
         current_delta_val = new_current - previous_current
+        power_delta_val = (new_current * new_voltage) - (previous_current * previous_voltage)
 
         # Calculate differential capacities (dQ/dV) for charge and discharge
         differential_capacity_charged = capacity_charged / voltage_delta_val if voltage_delta_val != 0 else None
@@ -134,6 +137,7 @@ async def timeseries_generator(
                 "duration__s": (new_time - previous_timestamp).total_seconds(),
                 "voltage_delta__V": voltage_delta_val,
                 "current_delta__A": current_delta_val,
+                "power_delta__W": power_delta_val,
                 "capacity_charged__Ah": capacity_charged,
                 "capacity_discharged__Ah": capacity_discharged,
                 "differential_capacity_charged__Ah_V": differential_capacity_charged,

@@ -3,8 +3,8 @@ install:
 	python -m pip install --upgrade pip
 	pip install -e . --upgrade --upgrade-strategy eager
 
-.PHONY: install_dev
-install_dev:
+.PHONY: install-dev
+install-dev:
 	python -m pip install --upgrade pip
 	pip install -e .[dev] --upgrade --upgrade-strategy eager
 
@@ -14,12 +14,12 @@ format:
 	ruff check . --fix
 	mypy . --install-types --ignore-missing-imports --non-interactive
 
-.PHONY: test_format
-test_format:
+.PHONY: test-format
+test-format:
 	ruff format . --check
 	ruff check .
 	mypy . --install-types --ignore-missing-imports --non-interactive
 
-.PHONY: test_unit
-test_unit:
+.PHONY: test-unit
+test-unit:
 	pytest tests/unit/

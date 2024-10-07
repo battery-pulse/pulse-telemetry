@@ -47,6 +47,7 @@ statistics_cycle_schema = T.StructType(
         # Resolution diagnostics (unsigned)
         T.StructField("max_voltage_delta__V", dataType=T.DoubleType(), nullable=False),  # Largest change in voltage (of a single record) over the cycle
         T.StructField("max_current_delta__A", dataType=T.DoubleType(), nullable=False),  # Largest change in current (of a single record) over the cycle
+        T.StructField("max_power_delta__W", dataType=T.DoubleType(), nullable=False),  # Largest change in power (of a single record) over the cycle
         T.StructField("max_duration__s", dataType=T.DoubleType(), nullable=False),  # Largest change in time (of a single record) over the cycle
         T.StructField("num_records", dataType=T.LongType(), nullable=False),  # Number of records over the cycle
         # Auxiliary metrics
@@ -121,6 +122,7 @@ def statistics_cycle(df: "DataFrame") -> "DataFrame":
         # Resolution diagnostics
         F.max("max_voltage_delta__V").alias("max_voltage_delta__V"),
         F.max("max_current_delta__A").alias("max_current_delta__A"),
+        F.max("max_power_delta__W").alias("max_power_delta__W"),
         F.max("max_duration__s").alias("max_duration__s"),
         F.sum("num_records").alias("num_records"),
         # Auxiliary metrics

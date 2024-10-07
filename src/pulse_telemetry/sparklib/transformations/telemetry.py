@@ -1,6 +1,6 @@
 import pyspark.sql.types as T
 
-timeseries_schema = T.StructType(
+telemetry_schema = T.StructType(
     [
         # Identifiers
         T.StructField("device_id", dataType=T.StringType(), nullable=False),  # ID of the measuring device
@@ -20,6 +20,7 @@ timeseries_schema = T.StructType(
         T.StructField("duration__s", dataType=T.DoubleType(), nullable=False),  # Time change from the previous record
         T.StructField("voltage_delta__V", dataType=T.DoubleType(), nullable=False),  # Change in voltage from the previous record
         T.StructField("current_delta__A", dataType=T.DoubleType(), nullable=False),  # Change in current from the previous record
+        T.StructField("power_delta__W", dataType=T.DoubleType(), nullable=False),  # Change in power from the previous record
         T.StructField("capacity_charged__Ah", dataType=T.DoubleType(), nullable=False),  # Unsigned capacity accumulated from the previous record under positive current conditions
         T.StructField("capacity_discharged__Ah", dataType=T.DoubleType(), nullable=False),  # Unsigned capacity accumulated from the previous record under negative current conditions
         T.StructField("differential_capacity_charged__Ah_V", dataType=T.DoubleType(), nullable=True),  # Signed dQ/dV for charge

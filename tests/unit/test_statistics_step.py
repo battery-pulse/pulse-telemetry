@@ -1,7 +1,7 @@
 import datetime
 
 from pulse_telemetry.sparklib.transformations.statistics_step import statistics_step, statistics_step_schema
-from pulse_telemetry.sparklib.transformations.timeseries import timeseries_schema
+from pulse_telemetry.sparklib.transformations.telemetry import telemetry_schema
 from pyspark.sql import Row
 from pytest import approx
 
@@ -58,6 +58,7 @@ def test_aggregations(statistics_step_df):
         0.2
     ), "Max voltage delta - discharge"  # Resolution diagnostics
     assert discharge_record.max_current_delta__A == approx(2), "Max current delta - discharge"
+    assert discharge_record.max_power_delta__W == approx(7.8), "Max power delta - discharge"
     assert discharge_record.max_duration__s == approx(0.1, abs=0.01), "Max duration - discharge"
     assert discharge_record.num_records == 5, "Num records - discharge"
     assert discharge_record.auxiliary == {"temperature": 25.0}, "Auxiliary - discharge"
@@ -93,6 +94,7 @@ def test_aggregations(statistics_step_df):
     assert charge_record.discharge_energy__Wh == approx(0.0, abs=0.001), "Discharge energy - charge."
     assert charge_record.max_voltage_delta__V == approx(0.2), "Max voltage delta - charge"  # Resolution diagnostics
     assert charge_record.max_current_delta__A == approx(1), "Max current delta - charge"
+    assert charge_record.max_power_delta__W == approx(3.2), "Max power delta - charge"
     assert charge_record.max_duration__s == approx(0.1, abs=0.01), "Max duration - charge"
     assert charge_record.num_records == 5, "Num records - charge"
     assert charge_record.auxiliary == {"temperature": 25.0}, "Auxiliary - charge"
@@ -128,6 +130,7 @@ def test_aggregations(statistics_step_df):
     assert rest_record.discharge_energy__Wh == approx(0.0), "Discharge energy - rest."
     assert rest_record.max_voltage_delta__V == approx(0.0), "Max voltage delta - rest"  # Resolution diagnostics
     assert rest_record.max_current_delta__A == approx(1), "Max current delta - rest"
+    assert rest_record.max_power_delta__W == approx(3.0), "Max power delta - rest"
     assert rest_record.max_duration__s == approx(0.1, abs=0.01), "Max duration - rest"
     assert rest_record.num_records == 5, "Num records - rest"
     assert rest_record.auxiliary == {"temperature": 25.0}, "Auxiliary - rest"
@@ -138,7 +141,7 @@ def test_null_handling(spark_session):
     # Define nullable fields
     nullable_fields = [field.name for field in statistics_step_schema.fields if field.nullable]
     # Validates all null rows
-    nulled_timeseries = spark_session.createDataFrame(
+    nulled_telemetry = spark_session.createDataFrame(
         [
             Row(
                 device_id="A",
@@ -156,6 +159,7 @@ def test_null_handling(spark_session):
                 duration__s=0.0,
                 voltage_delta__V=0.0,
                 current_delta__A=0.0,
+                power_delta__W=0.0,
                 capacity_charged__Ah=0.0,
                 capacity_discharged__Ah=0.0,
                 differential_capacity_charged__Ah_V=None,
@@ -170,15 +174,15 @@ def test_null_handling(spark_session):
                 update_ts=datetime.datetime.now(datetime.timezone.utc),
             ),
         ],
-        schema=timeseries_schema,
+        schema=telemetry_schema,
     )
-    nulled_statistics_step_df = statistics_step(nulled_timeseries)
+    nulled_statistics_step_df = statistics_step(nulled_telemetry)
     record = nulled_statistics_step_df.collect()[0]
     for field in nullable_fields:
         assert getattr(record, field) is None, f"{field} should be null if not present in input."
 
     # Validates mixed nulls
-    nulled_timeseries = spark_session.createDataFrame(
+    nulled_telemetry = spark_session.createDataFrame(
         [
             Row(
                 device_id="A",
@@ -196,6 +200,7 @@ def test_null_handling(spark_session):
                 duration__s=0.0,
                 voltage_delta__V=0.0,
                 current_delta__A=0.0,
+                power_delta__W=0.0,
                 capacity_charged__Ah=0.0,
                 capacity_discharged__Ah=0.0,
                 differential_capacity_charged__Ah_V=None,
@@ -225,6 +230,7 @@ def test_null_handling(spark_session):
                 duration__s=0.0,
                 voltage_delta__V=0.0,
                 current_delta__A=0.0,
+                power_delta__W=0.0,
                 capacity_charged__Ah=0.0,
                 capacity_discharged__Ah=0.0,
                 differential_capacity_charged__Ah_V=1.0,
@@ -254,6 +260,7 @@ def test_null_handling(spark_session):
                 duration__s=0.0,
                 voltage_delta__V=0.0,
                 current_delta__A=0.0,
+                power_delta__W=0.0,
                 capacity_charged__Ah=0.0,
                 capacity_discharged__Ah=0.0,
                 differential_capacity_charged__Ah_V=None,
@@ -268,15 +275,15 @@ def test_null_handling(spark_session):
                 update_ts=datetime.datetime.now(datetime.timezone.utc),
             ),
         ],
-        schema=timeseries_schema,
+        schema=telemetry_schema,
     )
-    nulled_statistics_step_df = statistics_step(nulled_timeseries)
+    nulled_statistics_step_df = statistics_step(nulled_telemetry)
     record = nulled_statistics_step_df.collect()[0]
     for field in nullable_fields:
         assert getattr(record, field) is not None, f"{field} should not be null."
 
 
 def test_empty_df(spark_session):
-    empty_timeseries = spark_session.createDataFrame([], schema=timeseries_schema)
-    empty_statistics_step = statistics_step(empty_timeseries)
+    empty_telemetry = spark_session.createDataFrame([], schema=telemetry_schema)
+    empty_statistics_step = statistics_step(empty_telemetry)
     assert empty_statistics_step.count() == 0, "The output DataFrame should be empty for empty input."

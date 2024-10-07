@@ -48,6 +48,7 @@ def test_aggregations(statistics_cycle_df):
     assert record.discharge_energy__Wh == approx(3.4 * 0.5 / 3600), "Discharge energy."
     assert record.max_voltage_delta__V == approx(0.2), "Max voltage delta"  # Resolution diagnostics
     assert record.max_current_delta__A == approx(2), "Max current delta"
+    assert record.max_power_delta__W == approx(7.8), "Max power delta"
     assert record.max_duration__s == approx(0.1, abs=0.01), "Max duration"
     assert record.num_records == 15, "Num records"
     assert record.auxiliary == {"temperature": 25.0}, "Auxiliary"
@@ -96,6 +97,7 @@ def test_null_handling(spark_session):
                 discharge_energy__Wh=0.0,
                 max_voltage_delta__V=0.0,
                 max_current_delta__A=0.0,
+                max_power_delta__W=0.0,
                 max_duration__s=0.0,
                 num_records=0,
                 auxiliary=None,
@@ -148,6 +150,7 @@ def test_null_handling(spark_session):
                 discharge_energy__Wh=0.0,
                 max_voltage_delta__V=0.0,
                 max_current_delta__A=0.0,
+                max_power_delta__W=0.0,
                 max_duration__s=0.0,
                 num_records=0,
                 auxiliary=None,
@@ -189,6 +192,7 @@ def test_null_handling(spark_session):
                 discharge_energy__Wh=0.0,
                 max_voltage_delta__V=0.1,
                 max_current_delta__A=0.02,
+                max_power_delta__W=0.02,
                 max_duration__s=1.0,
                 num_records=100,
                 auxiliary={"temperature": 25.0},
