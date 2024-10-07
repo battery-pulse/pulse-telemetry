@@ -9,7 +9,7 @@ Welcome to the Pulse Telemetry repository. This project contains Spark applicati
 Enhanced schema for individual records from the battery. Encompasses:
 - **Identifiers**: device ID, test ID, step number, etc.
 - **Instantaneous Quantities**: timestamp, voltage, power, etc., measured at each individual record.
-- **Differential Quantities**: duration, voltage delta, differential capacity, etc., changes between consecutive records.
+- **Differential Quantities**: duration, differential capacity, etc., changes between consecutive records.
 - **Accumulated Quantities**: step duration, step capacity charged, etc., total values accumulated over the step.
 - **User-Defined Data**: auxiliary measurements (e.g., temperature) and metadata for additional context.
 
