@@ -16,7 +16,7 @@ def adjusted_watermark(
     sink: "DataFrame",
     timestamp_column: str = "update_ts",
     watermark_buffer: datetime.timedelta = datetime.timedelta(minutes=60),
-    default_watermark: datetime = datetime.datetime(1970, 1, 1)
+    default_watermark: datetime.datetime = datetime.datetime(1970, 1, 1)
 ) -> datetime:
     """Retrieves the maximum update timestamp from the sink DataFrame and subtracts a buffer.
 
@@ -30,7 +30,7 @@ def adjusted_watermark(
         The name of the "updated at" timestamp column in the sink table.
     watermark_buffer : datetime.timedelta
         The time delta to subtract from the max timestamp as a buffer.
-    default_watermark : datetime
+    default_watermark : datetime.datetime
         The default timestamp to use if the sink table is empty.
 
     Returns
@@ -61,7 +61,7 @@ def updated_groups_in_source(
     ----------
     source : DataFrame
         The source table.
-    adjusted_watermark : datetime
+    adjusted_watermark : datetime.datetime
         The watermark, which is used to filter for updated rows in the source.
     sink_group_by_cols : List[str]
         The columns that define a group in the sink.
