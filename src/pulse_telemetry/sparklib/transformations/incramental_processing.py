@@ -110,12 +110,8 @@ def source_records_for_updated_groups(
     sampled_count = updated_groups.limit(broadcast_threshold + 1).count()
     
     if sampled_count <= broadcast_threshold:
-        # Broadcast join
-        print(f"Broadcasting updated_groups with {sampled_count} groups.")
         all_records = source.join(F.broadcast(updated_groups), on=sink_group_by_cols, how="inner")
     else:
-        # Semi-join
-        print(f"Using semi-join for more than {broadcast_threshold} groups.")
         all_records = source.join(updated_groups, on=sink_group_by_cols, how="left_semi")
 
     updated_groups.unpersist()  # Free updated groups
@@ -159,7 +155,7 @@ def incramental_processing(
         The DataFrame resulting from applying the aggregation function to the filtered source records.
     """
 
-    # Step 1: Get the adjusted last processed timestamp from the sink DataFrame
+    # Get the adjusted last processed timestamp from the sink DataFrame
     adjusted_timestamp = adjusted_watermark(
         sink,
         timestamp_column=timestamp_col,
@@ -167,7 +163,7 @@ def incramental_processing(
         default_watermark=default_timestamp
     )
 
-    # Step 2: Identify updated groups in the source DataFrame
+    # Identify updated groups in the source DataFrame
     updated_groups = updated_groups_in_source(
         source,
         adjusted_timestamp,
@@ -177,7 +173,7 @@ def incramental_processing(
     if not updated_groups.head(1):
         return source.sql_ctx.createDataFrame([], source.schema)  # Return an empty DataFrame if no updates
 
-    # Step 3: Fetch all records for updated groups
+    # Fetch all records for updated groups
     all_records = source_records_for_updated_groups(
         source,
         updated_groups,
@@ -185,5 +181,5 @@ def incramental_processing(
         broadcast_threshold=broadcast_threshold
     )
 
-    # Step 4: Perform aggregations and return the result
+    # Perform aggregations and return the result
     return aggregation_function(all_records)
