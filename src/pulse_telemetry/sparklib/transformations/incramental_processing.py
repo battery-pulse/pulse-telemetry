@@ -5,12 +5,16 @@ pruning is implemented through the date partitions in telemetry and statistics_s
 """
 
 import datetime
-from typing import List, Callable, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import pyspark.sql.functions as F
 
 if TYPE_CHECKING:
-    from pyspark.sql import DataFrame, SparkSession
+    from collections.abc import Callable
+
+    from pyspark.sql import DataFrame
+
+    Aggregation = Callable[[DataFrame], DataFrame]
 
 
 def _adjusted_watermark(
@@ -27,26 +31,30 @@ def _adjusted_watermark(
 
 
 def _updated_groups_in_source(
-    source: DataFrame,
-    group_by_columns: List[str],  # Whatever groups in the source identifies a record in the sink
+    source: "DataFrame",
+    group_by_columns: list[str],  # Whatever groups in the source identifies a record in the sink
     partition_cutoff: str,  # Used for partition pruning
     partition_column: str,
     watermark: datetime.datetime,  # Filter for records that have come in since last batch
     watermark_column: str,
-) -> DataFrame:
-    return source.filter(
-        (F.col(partition_column) >= partition_cutoff) &  # Used for partition pruning
-        (F.col(watermark_column) > watermark)  # Records not processed in last batch
-    ).select(*group_by_columns).distinct()
+) -> "DataFrame":
+    return (
+        source.filter(
+            (F.col(partition_column) >= partition_cutoff)  # Used for partition pruning
+            & (F.col(watermark_column) > watermark)  # Records not processed in last batch
+        )
+        .select(*group_by_columns)
+        .distinct()
+    )
 
 
 def _source_records_for_updated_groups(
-    source: DataFrame,
-    updated_groups: DataFrame,  # The distinct groups that have new data
+    source: "DataFrame",
+    updated_groups: "DataFrame",  # The distinct groups that have new data
     partition_cutoff: str,  # Used for partition pruning
     partition_column: str,
     broadcast_threshold: int,  # Determines if you use a broadcast join
-) -> DataFrame:
+) -> "DataFrame":
     # Cache the updated_groups to avoid recomputation
     updated_groups = updated_groups.cache()
 
@@ -61,20 +69,12 @@ def _source_records_for_updated_groups(
         # Use broadcast join for efficiency
         all_records = source.filter(
             F.col(partition_column) >= partition_cutoff  # Partition pruning
-        ).join(
-            F.broadcast(updated_groups),
-            on=updated_groups.columns,
-            how="left_semi"
-        )
+        ).join(F.broadcast(updated_groups), on=updated_groups.columns, how="left_semi")
     else:
         # Use standard join to handle large number of groups
         all_records = source.filter(
             F.col(partition_column) >= partition_cutoff  # Partition pruning
-        ).join(
-            updated_groups,
-            on=updated_groups.columns,
-            how="left_semi"
-        )
+        ).join(updated_groups, on=updated_groups.columns, how="left_semi")
 
     updated_groups.unpersist()  # Free up the cached DataFrame
     return all_records
@@ -83,14 +83,14 @@ def _source_records_for_updated_groups(
 def incramental_processing(
     source: "DataFrame",
     sink: "DataFrame",
-    aggregation_function: Callable[["DataFrame"], "DataFrame"],
-    group_by_columns: List[str],
+    aggregation_function: "Aggregation",
+    group_by_columns: list[str],
     partition_cutoff: str,
     partition_column: str,
     watermark_column: str = "update_ts",
     watermark_buffer: datetime.timedelta = datetime.timedelta(minutes=60),
-    watermark_default: datetime.datetime = datetime.datetime(1970, 1, 1),
-    broadcast_threshold: int = 10000
+    watermark_default: datetime.datetime = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc),
+    broadcast_threshold: int = 10000,
 ) -> "DataFrame":
     """Incramental processing for aggregation transformations.
 
@@ -130,7 +130,7 @@ def incramental_processing(
         sink=sink,
         watermark_column=watermark_column,
         watermark_buffer=watermark_buffer,
-        watermark_default=watermark_default
+        watermark_default=watermark_default,
     )
 
     # Identify updated groups in the source DataFrame
@@ -145,10 +145,11 @@ def incramental_processing(
 
     # Fetch all records for updated groups
     all_records = _source_records_for_updated_groups(
-        source,
-        updated_groups,
-        group_by_columns,
-        broadcast_threshold=broadcast_threshold
+        source=source,
+        updated_groups=updated_groups,
+        partition_cutoff=partition_cutoff,
+        partition_column=partition_column,
+        broadcast_threshold=broadcast_threshold,
     )
 
     # Perform aggregations on the updated groups
