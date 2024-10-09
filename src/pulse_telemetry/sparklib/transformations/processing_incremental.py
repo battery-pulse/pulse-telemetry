@@ -80,7 +80,7 @@ def _source_records_for_updated_groups(
     return all_records
 
 
-def incremental_processing(
+def processing_incremental(
     source: "DataFrame",
     sink: "DataFrame",
     aggregation_function: "Aggregation",
