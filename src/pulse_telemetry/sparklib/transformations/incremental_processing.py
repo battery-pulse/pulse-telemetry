@@ -80,7 +80,7 @@ def _source_records_for_updated_groups(
     return all_records
 
 
-def incramental_processing(
+def incremental_processing(
     source: "DataFrame",
     sink: "DataFrame",
     aggregation_function: "Aggregation",
@@ -92,7 +92,7 @@ def incramental_processing(
     watermark_default: datetime.datetime = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc),
     broadcast_threshold: int = 10000,
 ) -> "DataFrame":
-    """Incramental processing for aggregation transformations.
+    """Incremental processing for aggregation transformations.
 
     Applicable for telemetry -> statistics_step and statistics_step -> statistics_cycle.
 
