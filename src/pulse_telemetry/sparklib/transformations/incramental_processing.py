@@ -1,3 +1,9 @@
+"""Implements incramental processing for statistics_step and statistics_cycle. Partition
+pruning is implemented through the date partitions in telemetry and statistics_step:
+- telemetry (device_id, test_id, month)
+- statistics_step (device_id, year)
+"""
+
 import datetime
 from typing import List, Callable, TYPE_CHECKING
 
@@ -7,146 +13,110 @@ if TYPE_CHECKING:
     from pyspark.sql import DataFrame, SparkSession
 
 
-# Telem - device id, test id, month
-# Steps - device id, year
-# Cycle - device id, year
-
-
-def adjusted_watermark(
+def _adjusted_watermark(
     sink: "DataFrame",
-    timestamp_column: str = "update_ts",
-    watermark_buffer: datetime.timedelta = datetime.timedelta(minutes=60),
-    default_watermark: datetime.datetime = datetime.datetime(1970, 1, 1)
-) -> datetime:
-    """Retrieves the maximum update timestamp from the sink DataFrame and subtracts a buffer.
-
-    The buffer should be longer than the duration of the job that builds the sink dataset.
-
-    Parameters
-    ----------
-    sink : DataFrame
-        The sink table.
-    timestamp_column : str
-        The name of the "updated at" timestamp column in the sink table.
-    watermark_buffer : datetime.timedelta
-        The time delta to subtract from the max timestamp as a buffer.
-    default_watermark : datetime.datetime
-        The default timestamp to use if the sink table is empty.
-
-    Returns
-    -------
-    datetime
-        The adjusted maximum update timestamp as a datetime object.
-    """
-    if sink.head(1):  # not empty
-        max_timestamp = sink.agg(F.max(timestamp_column)).collect()[0][0] or default_watermark
+    watermark_column: str,  # In our case, update_ts
+    watermark_buffer: datetime.timedelta,  # Some records might have come in during processing
+    watermark_default: datetime.datetime,  # Default if there is not sink records
+) -> datetime.datetime:
+    if sink.head(1):  # Not empty
+        max_timestamp = sink.agg(F.max(watermark_column)).collect()[0][0] or watermark_default
     else:
-        max_timestamp = default_watermark
-
-    # Adjust the timestamp with buffer
+        max_timestamp = watermark_default
     return max_timestamp - watermark_buffer
 
 
-def updated_groups_in_source(
-    source: "DataFrame",
-    adjusted_watermark: datetime.datetime,
-    sink_group_by_cols: List[str],
-    timestamp_col: str = "update_ts"
-) -> "DataFrame":
-    """Identifies groups in the source DataFrame that have new data since the watermark.
-
-    The watermark represents the last time that data in the sink table was updated.
-
-    Parameters
-    ----------
-    source : DataFrame
-        The source table.
-    adjusted_watermark : datetime.datetime
-        The watermark, which is used to filter for updated rows in the source.
-    sink_group_by_cols : List[str]
-        The columns that define a group in the sink.
-    timestamp_col : str
-        The name of the "updated at" timestamp column in the source table.
-
-    Returns
-    -------
-    DataFrame
-        A DataFrame containing the distinct groups with new data.
-    """
+def _updated_groups_in_source(
+    source: DataFrame,
+    group_by_columns: List[str],  # Whatever groups in the source identifies a record in the sink
+    partition_cutoff: str,  # Used for partition pruning
+    partition_column: str,
+    watermark: datetime.datetime,  # Filter for records that have come in since last batch
+    watermark_column: str,
+) -> DataFrame:
     return source.filter(
-        F.col(timestamp_col) > adjusted_watermark
-    ).select(*sink_group_by_cols).distinct()
+        (F.col(partition_column) >= partition_cutoff) &  # Used for partition pruning
+        (F.col(watermark_column) > watermark)  # Records not processed in last batch
+    ).select(*group_by_columns).distinct()
 
 
-def source_records_for_updated_groups(
-    source: "DataFrame",
-    updated_groups: "DataFrame",
-    sink_group_by_cols: List[str],
-    broadcast_threshold: int = 10000  # Adjust based on your environment
-) -> "DataFrame":
-    """Fetches all records from the source DataFrame for the specified groups.
-
-    Parameters
-    ----------
-    source : DataFrame
-        The source table.
-    updated_groups : DataFrame
-        DataFrame containing the sink groups to fetch data for.
-    sink_group_by_cols : List[str]
-        The columns that define a group in the sink, used in a join.
-    broadcast_threshold : int
-        The maximum number of groups to broadcast. If the number of groups exceeds this threshold,
-        a semi-join is used instead of broadcasting.
-
-    Returns
-    -------
-    DataFrame
-        A DataFrame containing all source records for the specified groups.
-    """
-    # Cache the updated_groups to avoid recomputation (used twice below)
+def _source_records_for_updated_groups(
+    source: DataFrame,
+    updated_groups: DataFrame,  # The distinct groups that have new data
+    partition_cutoff: str,  # Used for partition pruning
+    partition_column: str,
+    broadcast_threshold: int,  # Determines if you use a broadcast join
+) -> DataFrame:
+    # Cache the updated_groups to avoid recomputation
     updated_groups = updated_groups.cache()
-    
+
     # Efficiently check the number of groups without counting the entire DataFrame
     sampled_count = updated_groups.limit(broadcast_threshold + 1).count()
-    
-    if sampled_count <= broadcast_threshold:
-        all_records = source.join(F.broadcast(updated_groups), on=sink_group_by_cols, how="inner")
-    else:
-        all_records = source.join(updated_groups, on=sink_group_by_cols, how="left_semi")
 
-    updated_groups.unpersist()  # Free updated groups
+    # Filters source records using a join
+    if sampled_count == 0:
+        # No updated records
+        all_records = source.limit(0)
+    elif sampled_count <= broadcast_threshold:
+        # Use broadcast join for efficiency
+        all_records = source.filter(
+            F.col(partition_column) >= partition_cutoff  # Partition pruning
+        ).join(
+            F.broadcast(updated_groups),
+            on=updated_groups.columns,
+            how="left_semi"
+        )
+    else:
+        # Use standard join to handle large number of groups
+        all_records = source.filter(
+            F.col(partition_column) >= partition_cutoff  # Partition pruning
+        ).join(
+            updated_groups,
+            on=updated_groups.columns,
+            how="left_semi"
+        )
+
+    updated_groups.unpersist()  # Free up the cached DataFrame
     return all_records
 
 
 def incramental_processing(
     source: "DataFrame",
     sink: "DataFrame",
-    sink_group_by_cols: List[str],
-    timestamp_col: str,
-    buffer_minutes: int,
     aggregation_function: Callable[["DataFrame"], "DataFrame"],
-    default_timestamp: datetime.datetime = datetime.datetime(1970, 1, 1),
-    broadcast_threshold: int = 10000  # Adjust based on your environment
+    group_by_columns: List[str],
+    partition_cutoff: str,
+    partition_column: str,
+    watermark_column: str = "update_ts",
+    watermark_buffer: datetime.timedelta = datetime.timedelta(minutes=60),
+    watermark_default: datetime.datetime = datetime.datetime(1970, 1, 1),
+    broadcast_threshold: int = 10000
 ) -> "DataFrame":
-    """Main incramental processing job of the source data.
+    """Incramental processing for aggregation transformations.
+
+    Applicable for telemetry -> statistics_step and statistics_step -> statistics_cycle.
 
     Parameters
     ----------
-    source : DataFrame
+    source: DataFrame
         The source table.
-    sink : DataFrame
+    sink: DataFrame
         The sink table.
-    sink_group_by_cols : List[str]
-        Columns that define the groups in the sink.
-    timestamp_col : str
-        The name of the timestamp column used for incremental reading.
-    buffer_minutes : int
-        Number of minutes to subtract from the last processed timestamp to handle late-arriving data.
-    aggregation_function : Callable[[DataFrame], DataFrame]
-        The aggregation function to apply to the data.
-    default_timestamp : datetime.datetime, optional
-        The default timestamp to use if the sink DataFrame is empty.
-    broadcast_threshold : int, optional
+    aggregation_function: Callable[[DataFrame], DataFrame]
+        The aggregation function to apply to the source data, returning the sink data.
+    group_by_columns: List[str]
+        The columns that define a group in the source and a record in the sink.
+    partition_cutoff: str
+        The date (in string format, either "YYYY" or "YYYY-MM") cutoff for partition pruning.
+    partition_column: str
+        The name of the date column used for partitioning in the source table.
+    watermark_column: str
+        The name of the timestamp column representing when records were processed by the system.
+    watermark_buffer: datetime.timedelta
+        The time delta to subtract from the last processed timestamp as a buffer.
+    watermark_default: datetime.datetime, optional
+        The default timestamp to use if the sink table is empty.
+    broadcast_threshold: int, optional
         The maximum number of groups to broadcast in joins.
 
     Returns
@@ -156,30 +126,30 @@ def incramental_processing(
     """
 
     # Get the adjusted last processed timestamp from the sink DataFrame
-    adjusted_timestamp = adjusted_watermark(
-        sink,
-        timestamp_column=timestamp_col,
-        watermark_buffer=datetime.timedelta(minutes=buffer_minutes),
-        default_watermark=default_timestamp
+    watermark = _adjusted_watermark(
+        sink=sink,
+        watermark_column=watermark_column,
+        watermark_buffer=watermark_buffer,
+        watermark_default=watermark_default
     )
 
     # Identify updated groups in the source DataFrame
-    updated_groups = updated_groups_in_source(
-        source,
-        adjusted_timestamp,
-        sink_group_by_cols,
-        timestamp_col=timestamp_col
+    updated_groups = _updated_groups_in_source(
+        source=source,
+        group_by_columns=group_by_columns,
+        partition_cutoff=partition_cutoff,
+        partition_column=partition_column,
+        watermark=watermark,
+        watermark_column=watermark_column,
     )
-    if not updated_groups.head(1):
-        return source.sql_ctx.createDataFrame([], source.schema)  # Return an empty DataFrame if no updates
 
     # Fetch all records for updated groups
-    all_records = source_records_for_updated_groups(
+    all_records = _source_records_for_updated_groups(
         source,
         updated_groups,
-        sink_group_by_cols,
+        group_by_columns,
         broadcast_threshold=broadcast_threshold
     )
 
-    # Perform aggregations and return the result
+    # Perform aggregations on the updated groups
     return aggregation_function(all_records)
