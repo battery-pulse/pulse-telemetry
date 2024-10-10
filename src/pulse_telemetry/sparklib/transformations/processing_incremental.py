@@ -53,25 +53,19 @@ def _source_records_for_updated_groups(
     updated_groups: "DataFrame",  # The distinct groups that have new data
     partition_cutoff: str,  # Used for partition pruning
     partition_column: str,
-    broadcast_threshold: int,  # Determines if you use a broadcast join
 ) -> "DataFrame":
     # Cache the updated_groups to avoid recomputation
     updated_groups = updated_groups.cache()
 
     # Efficiently check the number of groups without counting the entire DataFrame
-    sampled_count = updated_groups.limit(broadcast_threshold + 1).count()
+    sampled_count = updated_groups.limit(1).count()
 
     # Filters source records using a join
     if sampled_count == 0:
         # No updated records
         all_records = source.limit(0)
-    elif sampled_count <= broadcast_threshold:
-        # Use broadcast join for efficiency
-        all_records = source.filter(
-            F.col(partition_column) >= partition_cutoff  # Partition pruning
-        ).join(F.broadcast(updated_groups), on=updated_groups.columns, how="left_semi")
     else:
-        # Use standard join to handle large number of groups
+        # See spark session for `spark.sql.autoBroadcastJoinThreshold`
         all_records = source.filter(
             F.col(partition_column) >= partition_cutoff  # Partition pruning
         ).join(updated_groups, on=updated_groups.columns, how="left_semi")
@@ -90,7 +84,6 @@ def processing_incremental(
     watermark_column: str = "update_ts",
     watermark_buffer: datetime.timedelta = datetime.timedelta(minutes=60),
     watermark_default: datetime.datetime = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc),
-    broadcast_threshold: int = 10000,
 ) -> "DataFrame":
     """Incremental processing for aggregation transformations.
 
@@ -116,8 +109,6 @@ def processing_incremental(
         The time delta to subtract from the last processed timestamp as a buffer.
     watermark_default: datetime.datetime, optional
         The default timestamp to use if the sink table is empty.
-    broadcast_threshold: int, optional
-        The maximum number of groups to broadcast in joins.
 
     Returns
     -------
@@ -149,7 +140,6 @@ def processing_incremental(
         updated_groups=updated_groups,
         partition_cutoff=partition_cutoff,
         partition_column=partition_column,
-        broadcast_threshold=broadcast_threshold,
     )
 
     # Perform aggregations on the updated groups
