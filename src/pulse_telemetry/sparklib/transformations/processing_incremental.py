@@ -33,7 +33,7 @@ def _adjusted_watermark(
 def _updated_groups_in_source(
     source: "DataFrame",
     group_by_columns: list[str],  # Whatever groups in the source identifies a record in the sink
-    partition_cutoff: str,  # Used for partition pruning
+    partition_cutoff: datetime.datetime,  # Used for partition pruning
     partition_column: str,
     watermark: datetime.datetime,  # Filter for records that have come in since last batch
     watermark_column: str,
@@ -51,7 +51,7 @@ def _updated_groups_in_source(
 def _source_records_for_updated_groups(
     source: "DataFrame",
     updated_groups: "DataFrame",  # The distinct groups that have new data
-    partition_cutoff: str,  # Used for partition pruning
+    partition_cutoff: datetime.datetime,  # Used for partition pruning
     partition_column: str,
 ) -> "DataFrame":
     # Cache the updated_groups to avoid recomputation
@@ -79,7 +79,7 @@ def processing_incremental(
     sink: "DataFrame",
     aggregation_function: "Aggregation",
     group_by_columns: list[str],
-    partition_cutoff: str,
+    partition_cutoff: datetime.datetime,
     partition_column: str,
     watermark_column: str = "update_ts",
     watermark_buffer: datetime.timedelta = datetime.timedelta(minutes=60),
@@ -101,7 +101,7 @@ def processing_incremental(
         The columns that define a group in the source and a record in the sink.
     partition_cutoff: str
         The date (in string format, either "YYYY" or "YYYY-MM") cutoff for partition pruning.
-    partition_column: str
+    partition_column: datetime.datetime
         The name of the date column used for partitioning in the source table.
     watermark_column: str
         The name of the timestamp column representing when records were processed by the system.
