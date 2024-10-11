@@ -13,7 +13,6 @@ class TelemetryState(TypedDict):
     step_id: int | None
     record_number: int
     timestamp: str
-    date: str
     current__A: float
     voltage__V: float
     power__W: float
@@ -52,7 +51,6 @@ async def telemetry_generator(
         "step_id": 0,
         "record_number": 0,
         "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-        "date": datetime.datetime.now(datetime.timezone.utc).date().isoformat(),
         "current__A": 0.0,
         "voltage__V": lower_voltage_limit,
         "power__W": 0.0,
@@ -88,7 +86,6 @@ async def telemetry_generator(
         state.update(
             {
                 "timestamp": new_time.isoformat(),
-                "date": new_time.date().isoformat(),
                 "update_ts": new_time.isoformat(),
                 "record_number": state["record_number"] + 1,
             }

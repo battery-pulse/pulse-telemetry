@@ -20,7 +20,7 @@ def test_groupby(statistics_step_df):
     assert first_record.cycle_number == 1, "Expecting cycle 1 to be first group."
     assert first_record.step_number == 1, "Expecting step 1 to be first group."
     assert first_record.step_type == "Rest", "Expecting rest to be first group."
-    assert first_record.step_id == 0, "Expecing step-id 0 to be first group."
+    assert first_record.step_id == 0, "Expecting step-id 0 to be first group."
 
 
 def test_aggregations(statistics_step_df):
@@ -152,7 +152,6 @@ def test_null_handling(spark_session):
                 step_id=None,
                 record_number=1,
                 timestamp=datetime.datetime.now(datetime.timezone.utc),
-                date=datetime.datetime.now(datetime.timezone.utc).date(),
                 voltage__V=0.0,
                 current__A=0.0,
                 power__W=0.0,
@@ -193,7 +192,6 @@ def test_null_handling(spark_session):
                 step_id=None,
                 record_number=1,
                 timestamp=datetime.datetime.now(datetime.timezone.utc),
-                date=datetime.datetime.now(datetime.timezone.utc).date(),
                 voltage__V=0.0,
                 current__A=0.0,
                 power__W=0.0,
@@ -223,7 +221,6 @@ def test_null_handling(spark_session):
                 step_id=1,
                 record_number=2,
                 timestamp=datetime.datetime.now(datetime.timezone.utc),
-                date=datetime.datetime.now(datetime.timezone.utc).date(),
                 voltage__V=0.0,
                 current__A=1.0,
                 power__W=1.0,
@@ -253,7 +250,6 @@ def test_null_handling(spark_session):
                 step_id=1,
                 record_number=3,
                 timestamp=datetime.datetime.now(datetime.timezone.utc),
-                date=datetime.datetime.now(datetime.timezone.utc).date(),
                 voltage__V=0.0,
                 current__A=-1.0,
                 power__W=-1.0,
