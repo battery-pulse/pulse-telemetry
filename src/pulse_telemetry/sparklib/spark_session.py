@@ -43,5 +43,7 @@ def spark_session(app_name: str, hive_uri: str, warehouse_path: str, catalog_nam
         .config("spark.sql.catalog.defaultCatalog", f"{catalog_name}")  # Set hive as the default catalog
         # Performance tuning
         .config("spark.sql.autoBroadcastJoinThreshold", 10 * 1024 * 1024)
+        # Timezone
+        .config("spark.sql.session.timeZone", "UTC")
         .getOrCreate()
     )

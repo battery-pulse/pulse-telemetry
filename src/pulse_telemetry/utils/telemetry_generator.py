@@ -36,7 +36,7 @@ class TelemetryState(TypedDict):
 
 
 async def telemetry_generator(
-    aquisition_frequency: int,  # Hz
+    acquisition_frequency: int,  # Hz
     points_per_step: int,
     lower_voltage_limit: float = 3.0,  # V
     upper_voltage_limit: float = 4.0,  # V
@@ -76,7 +76,7 @@ async def telemetry_generator(
 
     step_record_number = 0  # internal state, used to determine step transitions
     voltage_delta = (upper_voltage_limit - lower_voltage_limit) / points_per_step
-    capacity_energy_factor = 1.0 / aquisition_frequency / 3600
+    capacity_energy_factor = 1.0 / acquisition_frequency / 3600
 
     while True:
         previous_timestamp = datetime.datetime.fromisoformat(state["timestamp"])
@@ -152,7 +152,7 @@ async def telemetry_generator(
 
         # Yields state before handling step transitions
         yield state
-        await asyncio.sleep(1.0 / aquisition_frequency)
+        await asyncio.sleep(1.0 / acquisition_frequency)
 
         # Handles step transitions after the state is sent
         if step_record_number == points_per_step:

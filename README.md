@@ -34,6 +34,14 @@ Aggregation of telemetry data at the cycle level:
 
 ## Developer Notes
 
+### UTC as the Standard Timezone
+
+- **Spark Timezones**: Timestamps in Spark are timezone naive, meaning they do not store timezone info. To consistently manage the timezone that timestamps are created in within your Spark application, ensure that you set the timezone in the Spark session to UTC `builder.config("spark.sql.session.timeZone", "UTC")`.
+
+- **Python-Spark Conversions**: When Python datetime objects with timezones are read into Spark, they will be converted to the session timezone. When the timestamp is read back into python, the time will be adjusted to the local timezone, but no timezone info will be attached. It is recommended to convert these to UTC `ts.astimezone(datetime.UTC)`.
+
+- **Additional Timestamp Sources**: Data entering the system from outside sources will be assumed to be in UTC time. Within this project, we have made every effort to work with UTC as the standard to facilitate logical reasoning about timed quantities.
+
 ### Reservation of Window Functions
 
 - **Window Function Usage**: Window functions, such as `lead()` and `lag()`, significantly increase the size of state within a Spark application, which can lead to increased memory usage and complexity, especially in streaming contexts. To mitigate these issues, we have made a conscious decision to limit the use of window functions to preprocessing steps only, which are closer to the source systems.

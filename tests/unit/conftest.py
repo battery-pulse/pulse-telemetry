@@ -9,7 +9,7 @@ from pyspark.sql import DataFrame, SparkSession
 
 @pytest.fixture(scope="session")
 def spark_session() -> SparkSession:
-    return SparkSession.builder.appName("UnitTesting").getOrCreate()
+    return SparkSession.builder.appName("UnitTesting").config("spark.sql.session.timeZone", "UTC").getOrCreate()
 
 
 @pytest.fixture(scope="session")
@@ -22,7 +22,7 @@ def telemetry_df(spark_session) -> DataFrame:
         topic="telemetry",
         num_channels=5,
         timeout_seconds=3,
-        aquisition_frequency=10,
+        acquisition_frequency=10,
         points_per_step=5,
         lower_voltage_limit=3,  # V
         upper_voltage_limit=4,  # V

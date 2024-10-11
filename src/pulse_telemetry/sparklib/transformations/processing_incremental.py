@@ -27,7 +27,8 @@ def _adjusted_watermark(
         max_timestamp = sink.agg(F.max(watermark_column)).collect()[0][0] or watermark_default
     else:
         max_timestamp = watermark_default
-    return max_timestamp - watermark_buffer
+    print(max_timestamp - watermark_buffer)
+    return (max_timestamp - watermark_buffer).astimezone(datetime.UTC)
 
 
 def _updated_groups_in_source(
