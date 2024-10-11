@@ -10,51 +10,51 @@ if TYPE_CHECKING:
 statistics_cycle_schema = T.StructType(
     [
         # Identifiers
-        T.StructField("device_id", dataType=T.StringType(), nullable=False),
-        T.StructField("test_id", dataType=T.StringType(), nullable=False),
-        T.StructField("cycle_number", dataType=T.IntegerType(), nullable=False),
+        T.StructField("device_id", dataType=T.StringType(), nullable=False, metadata={"comment": "ID of the measuring device."}),
+        T.StructField("test_id", dataType=T.StringType(), nullable=False, metadata={"comment": "ID of the measurement sequence."}),
+        T.StructField("cycle_number", dataType=T.IntegerType(), nullable=False, metadata={"comment": "Cycle number within the sequence."}),
         # Time
-        T.StructField("start_time", dataType=T.TimestampType(), nullable=False),  # Time at the start of the cycle
-        T.StructField("end_time", dataType=T.TimestampType(), nullable=False),  # Time at the end of the cycle
-        T.StructField("duration__s", dataType=T.DoubleType(), nullable=False),  # Time over the cycle
+        T.StructField("start_time", dataType=T.TimestampType(), nullable=False, metadata={"comment": "Timestamp at the start of the cycle."}),
+        T.StructField("end_time", dataType=T.TimestampType(), nullable=False, metadata={"comment": "Timestamp at the end of the cycle."}),
+        T.StructField("duration__s", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Time over the cycle in Seconds."}),
         # Voltage
-        T.StructField("start_voltage__V", dataType=T.DoubleType(), nullable=False),  # Voltage at the start of the cycle
-        T.StructField("end_voltage__V", dataType=T.DoubleType(), nullable=False),  # Voltage at the end of the cycle
-        T.StructField("min_voltage__V", dataType=T.DoubleType(), nullable=False),  # Minimum voltage over the cycle
-        T.StructField("max_voltage__V", dataType=T.DoubleType(), nullable=False),  # Maximum voltage over the cycle
-        T.StructField("time_averaged_voltage__V", dataType=T.DoubleType(), nullable=False),  # Average voltage over the cycle
+        T.StructField("start_voltage__V", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Voltage at the start of the cycle in Volts."}),
+        T.StructField("end_voltage__V", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Voltage at the end of the cycle in Volts."}),
+        T.StructField("min_voltage__V", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Minimum voltage over the cycle in Volts."}),
+        T.StructField("max_voltage__V", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Maximum voltage over the cycle in Volts."}),
+        T.StructField("time_averaged_voltage__V", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Time-averaged voltage over the cycle in Volts."}),
         # Current (signed, but min means smallest and max largest)
-        T.StructField("start_current__A", dataType=T.DoubleType(), nullable=False),  # Current at the start of the cycle
-        T.StructField("end_current__A", dataType=T.DoubleType(), nullable=False),  # Current at the end of the cycle
-        T.StructField("min_charge_current__A", dataType=T.DoubleType(), nullable=True),  # Smallest current in charge state
-        T.StructField("min_discharge_current__A", dataType=T.DoubleType(), nullable=True),  # Smallest current in discharge state
-        T.StructField("max_charge_current__A", dataType=T.DoubleType(), nullable=True),  # Largest current in charge state
-        T.StructField("max_discharge_current__A", dataType=T.DoubleType(), nullable=True),  # Largest current in discharge state
-        T.StructField("time_averaged_current__A", dataType=T.DoubleType(), nullable=False),  # Average current over the cycle
+        T.StructField("start_current__A", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Current at the start of the cycle in Amps."}),
+        T.StructField("end_current__A", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Current at the end of the cycle in Amps."}),
+        T.StructField("min_charge_current__A", dataType=T.DoubleType(), nullable=True, metadata={"comment": "Smallest charge current over the cycle in Amps."}),
+        T.StructField("min_discharge_current__A", dataType=T.DoubleType(), nullable=True, metadata={"comment": "Smallest discharge current over the cycle in Amps."}),
+        T.StructField("max_charge_current__A", dataType=T.DoubleType(), nullable=True, metadata={"comment": "Largest charge current over the cycle in Amps."}),
+        T.StructField("max_discharge_current__A", dataType=T.DoubleType(), nullable=True, metadata={"comment": "Largest discharge current over the cycle in Amps."}),
+        T.StructField("time_averaged_current__A", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Time-averaged current over the cycle in Amps."}),
         # Power (signed, but min means smallest and max largest)
-        T.StructField("start_power__W", dataType=T.DoubleType(), nullable=False),  # Power at the start of the cycle
-        T.StructField("end_power__W", dataType=T.DoubleType(), nullable=False),  # Power at the end of the cycle
-        T.StructField("min_charge_power__W", dataType=T.DoubleType(), nullable=True),  # Smallest power in the charge state
-        T.StructField("min_discharge_power__W", dataType=T.DoubleType(), nullable=True),  # Smallest power in the discharge state
-        T.StructField("max_charge_power__W", dataType=T.DoubleType(), nullable=True),  # Largest power in the charge state
-        T.StructField("max_discharge_power__W", dataType=T.DoubleType(), nullable=True),  # Largest power in the discharge state
-        T.StructField("time_averaged_power__W", dataType=T.DoubleType(), nullable=False),  # Average power over the cycle
+        T.StructField("start_power__W", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Power at the start of the cycle in Watts."}),
+        T.StructField("end_power__W", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Power at the end of the cycle in Watts."}),
+        T.StructField("min_charge_power__W", dataType=T.DoubleType(), nullable=True, metadata={"comment": "Smallest charge power over the cycle in Watts."}),
+        T.StructField("min_discharge_power__W", dataType=T.DoubleType(), nullable=True, metadata={"comment": "Smallest discharge power over the cycle in Watts."}),
+        T.StructField("max_charge_power__W", dataType=T.DoubleType(), nullable=True, metadata={"comment": "Largest charge power over the cycle in Watts."}),
+        T.StructField("max_discharge_power__W", dataType=T.DoubleType(), nullable=True, metadata={"comment": "Largest discharge power over the cycle in Watts."}),
+        T.StructField("time_averaged_power__W", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Time-averaged power over the cycle in Watts."}),
         # Accumulations (unsigned)
-        T.StructField("charge_capacity__Ah", dataType=T.DoubleType(), nullable=False),  # Unsigned capacity charged over the cycle
-        T.StructField("discharge_capacity__Ah", dataType=T.DoubleType(), nullable=False),  # Unsigned capacity discharged over the cycle
-        T.StructField("charge_energy__Wh", dataType=T.DoubleType(), nullable=False),  # Unsigned energy charged over the cycle
-        T.StructField("discharge_energy__Wh", dataType=T.DoubleType(), nullable=False),  # Unsigned energy discharged over the cycle
+        T.StructField("charge_capacity__Ah", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Unsigned capacity charged over the cycle in Amp-hours."}),
+        T.StructField("discharge_capacity__Ah", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Unsigned capacity discharged over the cycle in Amp-hours."}),
+        T.StructField("charge_energy__Wh", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Unsigned energy charged over the cycle in Watt-hours."}),
+        T.StructField("discharge_energy__Wh", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Unsigned energy discharged over the cycle in Watt-hours."}),
         # Resolution diagnostics (unsigned)
-        T.StructField("max_voltage_delta__V", dataType=T.DoubleType(), nullable=False),  # Largest change in voltage (of a single record) over the cycle
-        T.StructField("max_current_delta__A", dataType=T.DoubleType(), nullable=False),  # Largest change in current (of a single record) over the cycle
-        T.StructField("max_power_delta__W", dataType=T.DoubleType(), nullable=False),  # Largest change in power (of a single record) over the cycle
-        T.StructField("max_duration__s", dataType=T.DoubleType(), nullable=False),  # Largest change in time (of a single record) over the cycle
-        T.StructField("num_records", dataType=T.LongType(), nullable=False),  # Number of records over the cycle
+        T.StructField("max_voltage_delta__V", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Largest absolute change in voltage (of a single record) over the cycle in Volts."}),
+        T.StructField("max_current_delta__A", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Largest absolute change in current (of a single record) over the cycle in Amps."}),
+        T.StructField("max_power_delta__W", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Largest absolute change in power (of a single record) over the cycle in Watts."}),
+        T.StructField("max_duration__s", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Largest absolute change in time (of a single record) over the cycle in Seconds."}),
+        T.StructField("num_records", dataType=T.LongType(), nullable=False, metadata={"comment": "Number of records over the cycle."}),
         # Auxiliary metrics
-        T.StructField("auxiliary", dataType=T.MapType(T.StringType(), T.DoubleType()), nullable=True),  # First non-null auxiliary entry over the cycle
-        T.StructField("metadata", dataType=T.StringType(), nullable=True),  # First non-null metadata entry over the cycle
+        T.StructField("auxiliary", dataType=T.MapType(T.StringType(), T.DoubleType()), nullable=True, metadata={"comment": "First auxiliary measurements (e.g. temperature.) over the cycle"}),
+        T.StructField("metadata", dataType=T.StringType(), nullable=True, metadata={"comment": "First JSON string for user-specified fields over the cycle."}),
         # Metadata
-        T.StructField("update_ts", dataType=T.TimestampType(), nullable=False),
+        T.StructField("update_ts", dataType=T.TimestampType(), nullable=False, metadata={"comment": "Timestamp when the row was processed by the pulse telemetry application."}),
     ]
 )  # fmt: skip
 

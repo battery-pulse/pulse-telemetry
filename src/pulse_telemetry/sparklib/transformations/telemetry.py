@@ -34,6 +34,6 @@ telemetry_schema = T.StructType(
         T.StructField("auxiliary", dataType=T.MapType(T.StringType(), T.DoubleType()), nullable=True, metadata={"comment": "Auxiliary measurements (e.g. temperature.)"}),
         T.StructField("metadata", dataType=T.StringType(), nullable=True, metadata={"comment": "JSON string for user-specified fields."}),
         # Metadata
-        T.StructField("update_ts", dataType=T.TimestampType(), nullable=False, metadata={"comment": "Timestamp when the record was processed by the pulse telemetry application."}),
+        T.StructField("update_ts", dataType=T.TimestampType(), nullable=False, metadata={"comment": "Timestamp when the row was processed by the pulse telemetry application."}),
     ]
 )  # fmt: skip
