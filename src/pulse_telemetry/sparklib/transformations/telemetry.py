@@ -20,16 +20,16 @@ telemetry_schema = T.StructType(
         T.StructField("voltage_delta__V", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Change in voltage from the previous record in Watts."}),
         T.StructField("current_delta__A", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Change in current from the previous record in Amps."}),
         T.StructField("power_delta__W", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Change in power from the previous record in Watts."}),
-        T.StructField("capacity_charged__Ah", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Unsigned capacity (in Amp-hours) accumulated since the previous record under positive current conditions."}),
-        T.StructField("capacity_discharged__Ah", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Unsigned capacity (in Amp-hours) accumulated since the previous record under negative current conditions."}),
+        T.StructField("capacity_charged__Ah", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Unsigned capacity (in Amp-hours) accumulated since the previous record under charge conditions."}),
+        T.StructField("capacity_discharged__Ah", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Unsigned capacity (in Amp-hours) accumulated since the previous record under discharge conditions."}),
         T.StructField("differential_capacity_charged__Ah_V", dataType=T.DoubleType(), nullable=True, metadata={"comment": "Differential capacity (in Amp-hours per Volt) derived from the charged capacity."}),
         T.StructField("differential_capacity_discharged__Ah_V", dataType=T.DoubleType(), nullable=True, metadata={"comment": "Differential capacity (in Amp-hours per Volt) from the discharged capacity."}),
         # Accumulated quantities
         T.StructField("step_duration__s", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Time accumulated up until this point within the step in Seconds."}),
-        T.StructField("step_capacity_charged__Ah", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Unsigned capacity (in Amp-hours) accumulated up until this point within the step under positive current conditions."}),
-        T.StructField("step_capacity_discharged__Ah", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Unsigned capacity (in Amp-hours) accumulated up until this point within the step under negative current conditions."}),
-        T.StructField("step_energy_charged__Wh", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Unsigned energy (in Watt-hours) accumulated up until this point within the step under positive current conditions."}),
-        T.StructField("step_energy_discharged__Wh", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Unsigned energy (in Watt-hours) accumulated up until this point within the step under positive current conditions."}),
+        T.StructField("step_capacity_charged__Ah", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Unsigned capacity (in Amp-hours) accumulated up until this point within the step under charge conditions."}),
+        T.StructField("step_capacity_discharged__Ah", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Unsigned capacity (in Amp-hours) accumulated up until this point within the step under discharge conditions."}),
+        T.StructField("step_energy_charged__Wh", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Unsigned energy (in Watt-hours) accumulated up until this point within the step under charge conditions."}),
+        T.StructField("step_energy_discharged__Wh", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Unsigned energy (in Watt-hours) accumulated up until this point within the step under discharge conditions."}),
         # Additional fields
         T.StructField("auxiliary", dataType=T.MapType(T.StringType(), T.DoubleType()), nullable=True, metadata={"comment": "Auxiliary measurements (e.g. temperature.)"}),
         T.StructField("metadata", dataType=T.StringType(), nullable=True, metadata={"comment": "JSON string for user-specified fields."}),
@@ -37,3 +37,4 @@ telemetry_schema = T.StructType(
         T.StructField("update_ts", dataType=T.TimestampType(), nullable=False, metadata={"comment": "Timestamp when the row was processed by the pulse telemetry application."}),
     ]
 )  # fmt: skip
+telemetry_schema_comment = "Enriched individual telemetry records from the battery."

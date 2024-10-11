@@ -57,6 +57,7 @@ statistics_cycle_schema = T.StructType(
         T.StructField("update_ts", dataType=T.TimestampType(), nullable=False, metadata={"comment": "Timestamp when the row was processed by the pulse telemetry application."}),
     ]
 )  # fmt: skip
+statistics_cycle_schema_comment = "Aggregation of battery telemetry at the cycle level."
 
 
 def statistics_cycle(df: "DataFrame") -> "DataFrame":
