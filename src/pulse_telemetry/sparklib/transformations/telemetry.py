@@ -13,8 +13,8 @@ telemetry_schema = T.StructType(
         # Instantaneous quantities
         T.StructField("timestamp", dataType=T.TimestampType(), nullable=False, metadata={"comment": "Timestamp when the record was recorded in UTC."}),
         T.StructField("voltage__V", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Instantaneous voltage in Volts."}),
-        T.StructField("current__A", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Signed, instantaneous current in Amps. Negative is discharge."}),
-        T.StructField("power__W", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Signed, instantaneous power in Watts. Negative is discharge."}),
+        T.StructField("current__A", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Instantaneous current in Amps. Negative is discharge."}),
+        T.StructField("power__W", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Instantaneous power in Watts. Negative is discharge."}),
         # Differential quantities
         T.StructField("duration__s", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Time change from the previous record in Seconds."}),
         T.StructField("voltage_delta__V", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Change in voltage from the previous record in Watts."}),

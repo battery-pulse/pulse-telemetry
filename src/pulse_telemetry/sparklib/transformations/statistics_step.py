@@ -10,54 +10,54 @@ if TYPE_CHECKING:
 statistics_step_schema = T.StructType(
     [
         # Identifiers
-        T.StructField("device_id", dataType=T.StringType(), nullable=False),
-        T.StructField("test_id", dataType=T.StringType(), nullable=False),
-        T.StructField("cycle_number", dataType=T.IntegerType(), nullable=False),
-        T.StructField("step_number", dataType=T.LongType(), nullable=False),
-        T.StructField("step_type", dataType=T.StringType(), nullable=True),
-        T.StructField("step_id", dataType=T.IntegerType(), nullable=True),
+        T.StructField("device_id", dataType=T.StringType(), nullable=False, metadata={"comment": "ID of the measuring device."}),
+        T.StructField("test_id", dataType=T.StringType(), nullable=False, metadata={"comment": "ID of the measurement sequence."}),
+        T.StructField("cycle_number", dataType=T.IntegerType(), nullable=False, metadata={"comment": "Cycle number within the sequence."}),
+        T.StructField("step_number", dataType=T.LongType(), nullable=False, metadata={"comment": "Step number within the sequence."}),
+        T.StructField("step_type", dataType=T.StringType(), nullable=True, metadata={"comment": "Step type as a human-readable string."}),
+        T.StructField("step_id", dataType=T.IntegerType(), nullable=True, metadata={"comment": "Unique ID for the step type."}),
         # Time
-        T.StructField("start_time", dataType=T.TimestampType(), nullable=False),  # Time at the start of the step
-        T.StructField("end_time", dataType=T.TimestampType(), nullable=False),  # Time at the end of the step
-        T.StructField("duration__s", dataType=T.DoubleType(), nullable=False),  # Time over the step
+        T.StructField("start_time", dataType=T.TimestampType(), nullable=False, metadata={"comment": "Timestamp at the start of the step."}),
+        T.StructField("end_time", dataType=T.TimestampType(), nullable=False, metadata={"comment": "Timestamp at the end of the step."}),
+        T.StructField("duration__s", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Time over the step in Seconds."}),
         # Voltage
-        T.StructField("start_voltage__V", dataType=T.DoubleType(), nullable=False),  # Voltage at the start of the step
-        T.StructField("end_voltage__V", dataType=T.DoubleType(), nullable=False),  # Voltage at the end of the step
-        T.StructField("min_voltage__V", dataType=T.DoubleType(), nullable=False),  # Minimum voltage over the step
-        T.StructField("max_voltage__V", dataType=T.DoubleType(), nullable=False),  # Maximum voltage over the step
-        T.StructField("time_averaged_voltage__V", dataType=T.DoubleType(), nullable=False),  # Average voltage over the step
+        T.StructField("start_voltage__V", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Voltage at the start of the step in Volts."}),
+        T.StructField("end_voltage__V", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Voltage at the end of the step in Volts."}),
+        T.StructField("min_voltage__V", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Minimum voltage over the step in Volts."}),
+        T.StructField("max_voltage__V", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Maximum voltage over the step in Volts."}),
+        T.StructField("time_averaged_voltage__V", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Time-averaged voltage over the step in Volts."}),
         # Current (signed, but min means smallest and max largest)
-        T.StructField("start_current__A", dataType=T.DoubleType(), nullable=False),  # Current at the start of the step
-        T.StructField("end_current__A", dataType=T.DoubleType(), nullable=False),  # Current at the end of the step
-        T.StructField("min_charge_current__A", dataType=T.DoubleType(), nullable=True),  # Smallest current in charge state
-        T.StructField("min_discharge_current__A", dataType=T.DoubleType(), nullable=True),  # Smallest current in discharge state
-        T.StructField("max_charge_current__A", dataType=T.DoubleType(), nullable=True),  # Largest current in charge state
-        T.StructField("max_discharge_current__A", dataType=T.DoubleType(), nullable=True),  # Largest current in discharge state
-        T.StructField("time_averaged_current__A", dataType=T.DoubleType(), nullable=False),  # Average current over the step
+        T.StructField("start_current__A", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Current at the start of the step in Amps."}),
+        T.StructField("end_current__A", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Current at the end of the step in Amps."}),
+        T.StructField("min_charge_current__A", dataType=T.DoubleType(), nullable=True, metadata={"comment": "Smallest positive current over the step in Amps."}),
+        T.StructField("min_discharge_current__A", dataType=T.DoubleType(), nullable=True, metadata={"comment": "Smallest negative current over the step in Amps."}),
+        T.StructField("max_charge_current__A", dataType=T.DoubleType(), nullable=True, metadata={"comment": "Largest positive current over the step in Amps."}),
+        T.StructField("max_discharge_current__A", dataType=T.DoubleType(), nullable=True, metadata={"comment": "Largest negative current over the step in Amps."}),
+        T.StructField("time_averaged_current__A", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Time-averaged current over the step in Amps."}),
         # Power (signed, but min means smallest and max largest)
-        T.StructField("start_power__W", dataType=T.DoubleType(), nullable=False),  # Power at the start of the step
-        T.StructField("end_power__W", dataType=T.DoubleType(), nullable=False),  # Power at the end of the step
-        T.StructField("min_charge_power__W", dataType=T.DoubleType(), nullable=True),  # Smallest power in the charge state
-        T.StructField("min_discharge_power__W", dataType=T.DoubleType(), nullable=True),  # Smallest power in the discharge state
-        T.StructField("max_charge_power__W", dataType=T.DoubleType(), nullable=True),  # Largest power in the charge state
-        T.StructField("max_discharge_power__W", dataType=T.DoubleType(), nullable=True),  # Largest power in the discharge state
-        T.StructField("time_averaged_power__W", dataType=T.DoubleType(), nullable=False),  # Average power over the step
+        T.StructField("start_power__W", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Power at the start of the step in Watts."}),
+        T.StructField("end_power__W", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Power at the end of the step in Watts."}),
+        T.StructField("min_charge_power__W", dataType=T.DoubleType(), nullable=True, metadata={"comment": "Smallest positive power over the step in Watts."}),
+        T.StructField("min_discharge_power__W", dataType=T.DoubleType(), nullable=True, metadata={"comment": "Smallest negative power over the step in Watts."}),
+        T.StructField("max_charge_power__W", dataType=T.DoubleType(), nullable=True, metadata={"comment": "Largest positive power over the step in Watts."}),
+        T.StructField("max_discharge_power__W", dataType=T.DoubleType(), nullable=True, metadata={"comment": "Largest negative power over the step in Watts."}),
+        T.StructField("time_averaged_power__W", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Time-averaged power over the step in Watts."}),
         # Accumulations (unsigned)
-        T.StructField("charge_capacity__Ah", dataType=T.DoubleType(), nullable=False),  # Unsigned capacity charged over the step
-        T.StructField("discharge_capacity__Ah", dataType=T.DoubleType(), nullable=False),  # Unsigned capacity discharged over the step
-        T.StructField("charge_energy__Wh", dataType=T.DoubleType(), nullable=False),  # Unsigned energy charged over the step
-        T.StructField("discharge_energy__Wh", dataType=T.DoubleType(), nullable=False),  # Unsigned energy discharged over the step
+        T.StructField("charge_capacity__Ah", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Unsigned capacity charged over the step in Amp-hours."}),
+        T.StructField("discharge_capacity__Ah", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Unsigned capacity discharged over the step in Amp-hours."}),
+        T.StructField("charge_energy__Wh", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Unsigned energy charged over the step in Watt-hours."}),
+        T.StructField("discharge_energy__Wh", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Unsigned energy discharged over the step in Watt-hours."}),
         # Resolution diagnostics (unsigned)
-        T.StructField("max_voltage_delta__V", dataType=T.DoubleType(), nullable=False),  # Largest change in voltage (of a single record) over the step
-        T.StructField("max_current_delta__A", dataType=T.DoubleType(), nullable=False),  # Largest change in current (of a single record) over the step
-        T.StructField("max_power_delta__W", dataType=T.DoubleType(), nullable=False),  # Largest change in power (of a single record) over the step
-        T.StructField("max_duration__s", dataType=T.DoubleType(), nullable=False),  # Largest change in time (of a single record) over the step
-        T.StructField("num_records", dataType=T.LongType(), nullable=False),  # Number of records over the step
+        T.StructField("max_voltage_delta__V", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Largest absolute change in voltage (of a single record) over the step in Volts."}),
+        T.StructField("max_current_delta__A", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Largest absolute change in current (of a single record) over the step in Amps."}),
+        T.StructField("max_power_delta__W", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Largest absolute change in power (of a single record) over the step in Watts."}),
+        T.StructField("max_duration__s", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Largest absolute change in time (of a single record) over the step in Seconds."}),
+        T.StructField("num_records", dataType=T.LongType(), nullable=False, metadata={"comment": "Number of records over the step."}),
         # Auxiliary metrics
-        T.StructField("auxiliary", dataType=T.MapType(T.StringType(), T.DoubleType()), nullable=True),  # First non-null auxiliary entry over the step
-        T.StructField("metadata", dataType=T.StringType(), nullable=True),  # First non-null metadata entry over the step
+        T.StructField("auxiliary", dataType=T.MapType(T.StringType(), T.DoubleType()), nullable=True, metadata={"comment": "Auxiliary measurements (e.g. temperature.)"}),
+        T.StructField("metadata", dataType=T.StringType(), nullable=True, metadata={"comment": "JSON string for user-specified fields."}),
         # Metadata
-        T.StructField("update_ts", dataType=T.TimestampType(), nullable=False),
+        T.StructField("update_ts", dataType=T.TimestampType(), nullable=False, metadata={"comment": "Timestamp when the record was processed by the pulse telemetry application."}),
     ]
 )  # fmt: skip
 
@@ -89,7 +89,7 @@ def statistics_step(df: "DataFrame") -> "DataFrame":
     time_weighted_avg = lambda col: (F.sum(F.col(col) * F.col("duration__s")) / F.sum("duration__s"))  # noqa: E731
 
     return df.groupBy("device_id", "test_id", "cycle_number", "step_number").agg(
-        # Identifiers (groupbys are already included)
+        # Identifiers (groupby columns are already included)
         F.first("step_type", ignorenulls=True).alias("step_type"),
         F.first("step_id", ignorenulls=True).alias("step_id"),
         # Time
