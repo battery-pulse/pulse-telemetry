@@ -1,0 +1,23 @@
+apiVersion: minio.stackable.tech/v1alpha1
+kind: MinIO
+metadata:
+  name: minio
+spec:
+  storage:
+    type: ephemeral  # For testing, ephemeral storage is used
+  credentials:
+    accessKey: minio
+    secretKey: minio123
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio
+spec:
+  type: NodePort
+  ports:
+    - port: 9000
+      targetPort: 9000
+      nodePort: 30000  # MinIO NodePort
+  selector:
+    app: minio

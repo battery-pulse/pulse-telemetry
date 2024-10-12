@@ -1,0 +1,22 @@
+apiVersion: hive.stackable.tech/v1alpha1
+kind: HiveMetastore
+metadata:
+  name: hive-metastore
+spec:
+  serviceName: hive-metastore
+  port: 9083
+  storage:
+    type: ephemeral  # For testing, ephemeral storage is used
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hive-metastore
+spec:
+  type: NodePort
+  ports:
+    - port: 9083
+      targetPort: 9083
+      nodePort: 30001  # Hive Metastore NodePort
+  selector:
+    app: hive-metastore
