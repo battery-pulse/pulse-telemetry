@@ -41,7 +41,7 @@ Aggregation of telemetry data at the cycle level:
 
 - **Unit Tests**: Focus on verifying the correctness of individual transformations. These tests ensure that each transformation gives correct values and handles edge cases with null-values and empty input data.
 
-- **Integration Tests**: Validate the data source and sink connectors, ensuring the application can connect to, read from, and write to external systems.
+- **Integration Tests**: Validate the data source and sink connectors, ensuring the application can connect to, read from, and write to external systems. Relies on Hive and Minio services running in either docker desktop or kind.
 
 ### Partitions and Sort Order
 

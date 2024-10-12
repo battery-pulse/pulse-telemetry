@@ -1,13 +1,45 @@
-apiVersion: minio.stackable.tech/v1alpha1
-kind: MinIO
+apiVersion: v1
+data:
+  CONSOLE_ACCESS_KEY: Y29uc29sZQ==
+  CONSOLE_SECRET_KEY: Y29uc29sZTEyMw==
+kind: Secret
 metadata:
-  name: minio
+  name: storage-user
+  namespace: default
+type: Opaque
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: storage-configuration
+type: Opaque
+stringData:
+  config.env: |-
+    export MINIO_ROOT_USER="minio"
+    export MINIO_ROOT_PASSWORD="minio123"
+---
+apiVersion: minio.min.io/v2
+kind: Tenant
+metadata:
+  name: minio-tenant
 spec:
-  storage:
-    type: ephemeral  # For testing, ephemeral storage is used
-  credentials:
-    accessKey: minio
-    secretKey: minio123
+  users:
+    - name: storage-user
+  configuration:
+    name: storage-configuration
+  pools:
+    - servers: 1
+      name: pool-0
+      volumesPerServer: 1
+      volumeClaimTemplate:
+        metadata:
+          name: data
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 2Gi
 ---
 apiVersion: v1
 kind: Service
@@ -18,6 +50,6 @@ spec:
   ports:
     - port: 9000
       targetPort: 9000
-      nodePort: 30000  # MinIO NodePort
+      nodePort: 30000  # Expose MinIO via NodePort
   selector:
-    app: minio
+    app: minio-tenant

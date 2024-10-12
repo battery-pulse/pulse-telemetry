@@ -1,12 +1,37 @@
+---
 apiVersion: hive.stackable.tech/v1alpha1
-kind: HiveMetastore
+kind: HiveCluster
 metadata:
   name: hive-metastore
 spec:
-  serviceName: hive-metastore
-  port: 9083
-  storage:
-    type: ephemeral  # For testing, ephemeral storage is used
+  image:
+    productVersion: 4.0.0
+    stackableVersion: 0.0.0-dev
+  clusterConfig:
+    database:
+      connString: jdbc:derby:;databaseName=/tmp/hive;create=true
+      credentialsSecret: hive-credentials
+      dbType: derby
+  metastore:
+    roleGroups:
+      default:
+        replicas: 1
+        config:
+          resources:
+            cpu:
+              min: 300m
+              max: "2"
+            memory:
+              limit: 5Gi
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: hive-credentials
+type: Opaque
+stringData:
+  username: APP
+  password: mine
 ---
 apiVersion: v1
 kind: Service
