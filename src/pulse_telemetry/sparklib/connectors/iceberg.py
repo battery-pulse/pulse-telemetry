@@ -40,9 +40,11 @@ def create_table_if_not_exists(
     bool
         Returns True if the table was created, and False if the table already exists.
     """
+    # Creates the database if it doesn't exist
+    spark.sql(f"CREATE SCHEMA IF NOT EXISTS iceberg_catalog.{database_name}")
     try:
         # Check if the table exists in the catalog
-        spark.catalog.getTable(f"{database_name}.{table_name}")
+        spark.catalog.getTable(f"iceberg_catalog.{database_name}.{table_name}")
         return False  # Table already exists
     except AnalysisException:
         # Table does not exist, proceed to create
@@ -129,7 +131,7 @@ def merge_into_table(
 
 
 def _create_clause(database_name: str, table_name: str, table_schema: "T.StructType") -> str:
-    query = f"CREATE TABLE {database_name}.{table_name} ("
+    query = f"CREATE TABLE IF NOT EXISTS iceberg_catalog.{database_name}.{table_name} ("
 
     for field in table_schema:
         if not field.metadata or "comment" not in field.metadata or not field.metadata["comment"].strip():
@@ -169,9 +171,9 @@ def _create_table_statement(
     table_comment_clause = _table_comment_clause(table_comment) if table_comment else ""
 
     final_query = create_clause
+    final_query += "\nUSING iceberg"
     if partition_clause:
         final_query += f"\n{partition_clause}"
     final_query += f"\n{table_comment_clause}"
-    final_query += "\nUSING iceberg;"
 
     return final_query

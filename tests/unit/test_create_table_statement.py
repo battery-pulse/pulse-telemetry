@@ -5,15 +5,15 @@ from pulse_telemetry.sparklib.connectors.iceberg import _create_table_statement
 expected_with_partitions = """CREATE TABLE pulse_telemetry.telemetry (
   field_1 boolean COMMENT 'Contains a comment.'
 )
+USING iceberg
 PARTITIONED BY (device_id, test_id, month(timestamp))
-COMMENT 'Example table.'
-USING iceberg;"""
+COMMENT 'Example table.'"""
 
 expected_without_partitions = """CREATE TABLE pulse_telemetry.telemetry (
   field_1 boolean COMMENT 'Contains a comment.'
 )
-COMMENT 'Example table.'
-USING iceberg;"""
+USING iceberg
+COMMENT 'Example table.'"""
 
 
 @pytest.fixture(scope="module")
