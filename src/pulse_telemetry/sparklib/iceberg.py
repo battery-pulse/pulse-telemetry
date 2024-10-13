@@ -13,11 +13,13 @@ def create_table_if_not_exists(
     table_comment: str,
     table_schema: "T.StructType",
     partition_columns: list[str] | None = None,
+    write_order_columns: list[str] | None = None,
 ) -> None:
     """Creates an Iceberg table if it does not already exist in the specified database.
 
-    Additionally, creates the database within the catalog if it does not exist. Make sure
-    to use a Spark session with an iceberg catalog and object storage configured.
+    Additionally, creates the database within the catalog if it does not exist. Additionally,
+    alters the write order of the table. Make sure to use a Spark session with an iceberg catalog
+    and object storage configured.
 
     Parameters
     ----------
@@ -35,6 +37,8 @@ def create_table_if_not_exists(
         The schema definition of the table as a PySpark StructType.
     partition_columns : list, optional
         List of column names to partition the table by.
+    write_order_columns : list, optional
+        List of columns to enforce write order.
 
     Returns
     -------
@@ -52,6 +56,14 @@ def create_table_if_not_exists(
         partition_columns=partition_columns,
     )
     spark.sql(create_table_if_not_exist_sql)
+    if write_order_columns:
+        alter_table_write_order_sql = _alter_table_write_order_statement(
+            catalog_name=catalog_name,
+            database_name=database_name,
+            table_name=table_name,
+            write_order_columns=write_order_columns,
+        )
+        spark.sql(alter_table_write_order_sql)
 
 
 def read_table(spark: "SparkSession", catalog_name: str, database_name: str, table_name: str) -> "DataFrame":
@@ -161,3 +173,10 @@ def _create_table_if_not_exists_statement(
             _comment_clause(table_comment),
         ]
     )
+
+
+def _alter_table_write_order_statement(
+    catalog_name: str, database_name: str, table_name: str, write_order_columns: list[str]
+) -> str:
+    cols = ", ".join(write_order_columns)
+    return f"ALTER TABLE {catalog_name}.{database_name}.{table_name} WRITE ORDERED BY {cols}"
