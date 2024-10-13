@@ -17,63 +17,6 @@ if TYPE_CHECKING:
     Aggregation = Callable[[DataFrame], DataFrame]
 
 
-def _adjusted_watermark(
-    sink: "DataFrame",
-    watermark_column: str,  # In our case, update_ts
-    watermark_buffer: datetime.timedelta,  # Some records might have come in during processing
-    watermark_default: datetime.datetime,  # Default if there is not sink records
-) -> datetime.datetime:
-    if sink.head(1):  # Not empty
-        max_timestamp = sink.agg(F.max(watermark_column)).collect()[0][0] or watermark_default
-    else:
-        max_timestamp = watermark_default
-    return (max_timestamp - watermark_buffer).astimezone(datetime.UTC)
-
-
-def _updated_groups_in_source(
-    source: "DataFrame",
-    group_by_columns: list[str],  # Whatever groups in the source identifies a record in the sink
-    partition_cutoff: datetime.datetime,  # Used for partition pruning
-    partition_column: str,
-    watermark: datetime.datetime,  # Filter for records that have come in since last batch
-    watermark_column: str,
-) -> "DataFrame":
-    return (
-        source.filter(
-            (F.col(partition_column) >= partition_cutoff)  # Used for partition pruning
-            & (F.col(watermark_column) > watermark)  # Records not processed in last batch
-        )
-        .select(*group_by_columns)
-        .distinct()
-    )
-
-
-def _source_records_for_updated_groups(
-    source: "DataFrame",
-    updated_groups: "DataFrame",  # The distinct groups that have new data
-    partition_cutoff: datetime.datetime,  # Used for partition pruning
-    partition_column: str,
-) -> "DataFrame":
-    # Cache the updated_groups to avoid recomputation
-    updated_groups = updated_groups.cache()
-
-    # Efficiently check the number of groups without counting the entire DataFrame
-    sampled_count = updated_groups.limit(1).count()
-
-    # Filters source records using a join
-    if sampled_count == 0:
-        # No updated records
-        all_records = source.limit(0)
-    else:
-        # See spark session for `spark.sql.autoBroadcastJoinThreshold`
-        all_records = source.filter(
-            F.col(partition_column) >= partition_cutoff  # Partition pruning
-        ).join(updated_groups, on=updated_groups.columns, how="left_semi")
-
-    updated_groups.unpersist()  # Free up the cached DataFrame
-    return all_records
-
-
 def processing_incremental(
     source: "DataFrame",
     sink: "DataFrame",
@@ -144,3 +87,60 @@ def processing_incremental(
 
     # Perform aggregations on the updated groups
     return aggregation_function(all_records)
+
+
+def _adjusted_watermark(
+    sink: "DataFrame",
+    watermark_column: str,  # In our case, update_ts
+    watermark_buffer: datetime.timedelta,  # Some records might have come in during processing
+    watermark_default: datetime.datetime,  # Default if there is not sink records
+) -> datetime.datetime:
+    if sink.head(1):  # Not empty
+        max_timestamp = sink.agg(F.max(watermark_column)).collect()[0][0] or watermark_default
+    else:
+        max_timestamp = watermark_default
+    return (max_timestamp - watermark_buffer).astimezone(datetime.UTC)
+
+
+def _updated_groups_in_source(
+    source: "DataFrame",
+    group_by_columns: list[str],  # Whatever groups in the source identifies a record in the sink
+    partition_cutoff: datetime.datetime,  # Used for partition pruning
+    partition_column: str,
+    watermark: datetime.datetime,  # Filter for records that have come in since last batch
+    watermark_column: str,
+) -> "DataFrame":
+    return (
+        source.filter(
+            (F.col(partition_column) >= partition_cutoff)  # Used for partition pruning
+            & (F.col(watermark_column) > watermark)  # Records not processed in last batch
+        )
+        .select(*group_by_columns)
+        .distinct()
+    )
+
+
+def _source_records_for_updated_groups(
+    source: "DataFrame",
+    updated_groups: "DataFrame",  # The distinct groups that have new data
+    partition_cutoff: datetime.datetime,  # Used for partition pruning
+    partition_column: str,
+) -> "DataFrame":
+    # Cache the updated_groups to avoid recomputation
+    updated_groups = updated_groups.cache()
+
+    # Efficiently check the number of groups without counting the entire DataFrame
+    sampled_count = updated_groups.limit(1).count()
+
+    # Filters source records using a join
+    if sampled_count == 0:
+        # No updated records
+        all_records = source.limit(0)
+    else:
+        # See spark session for `spark.sql.autoBroadcastJoinThreshold`
+        all_records = source.filter(
+            F.col(partition_column) >= partition_cutoff  # Partition pruning
+        ).join(updated_groups, on=updated_groups.columns, how="left_semi")
+
+    updated_groups.unpersist()  # Free up the cached DataFrame
+    return all_records
