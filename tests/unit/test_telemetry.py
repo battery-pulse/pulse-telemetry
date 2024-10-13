@@ -1,4 +1,4 @@
-from pulse_telemetry.sparklib.transformations.telemetry import telemetry_schema
+from pulse_telemetry.sparklib.telemetry import telemetry_schema
 
 
 def test_telemetry_generator(spark_session, telemetry_df):

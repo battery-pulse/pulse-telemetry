@@ -2,7 +2,7 @@ import datetime
 
 import pyspark.sql.types as T
 import pytest
-from pulse_telemetry.sparklib.transformations import processing_incremental, statistics_step
+from pulse_telemetry.sparklib import processing_incremental, statistics_step
 from pyspark.sql import DataFrame, Row
 
 

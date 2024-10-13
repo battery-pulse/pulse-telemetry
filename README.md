@@ -37,11 +37,13 @@ Aggregation of telemetry data at the cycle level:
 
 ### Test Coverage
 
-- **Data Generators**: We've implemented mock data sources that can asynchronously produce data, which are configurable to emit data at a desired frequency, like a series of test channels.
+- **Data Generators**: We've implemented mock data sources that can asynchronously produce data, configurable to emit data at a desired frequency, such as a series of test or asset channels.
 
-- **Unit Tests**: Focus on verifying the correctness of individual transformations. These tests ensure that each transformation gives correct values and handles edge cases with null-values and empty input data.
+- **Unit Tests**: Validate the correctness of individual transformations, ensuring each transformation produces correct values and handles edge cases, such as null values or empty input data.
 
-- **Integration Tests**: Validate the data source and sink connectors, ensuring the application can connect to, read from, and write to external systems. Relies on Hive and Minio services running in either docker desktop or kind.
+- **Integration Tests**: Verify the data source and sink connectors, ensuring that the application can successfully connect to, read from, and write to external systems. These tests rely on Hive and Minio running in a local kind cluster.
+
+- **Application Tests**: Confirm the behavior of applications within Kubernetes, ensuring that Spark applications are correctly deployed as custom resources. These tests check the end-to-end functionality, from deployment to data processing, ensuring that the applications behave as expected when deployed in the cluster.
 
 ### Partitions and Sort Order
 

@@ -1,7 +1,7 @@
 import datetime
 
-from pulse_telemetry.sparklib.transformations.statistics_step import statistics_step, statistics_step_schema
-from pulse_telemetry.sparklib.transformations.telemetry import telemetry_schema
+from pulse_telemetry.sparklib.statistics_step import statistics_step, statistics_step_schema
+from pulse_telemetry.sparklib.telemetry import telemetry_schema
 from pyspark.sql import Row
 from pytest import approx
 

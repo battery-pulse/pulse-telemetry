@@ -1,7 +1,5 @@
 from typing import TYPE_CHECKING
 
-from pyspark.sql.utils import AnalysisException
-
 if TYPE_CHECKING:
     import pyspark.sql.types as T
     from pyspark.sql import DataFrame, SparkSession
@@ -9,21 +7,24 @@ if TYPE_CHECKING:
 
 def create_table_if_not_exists(
     spark: "SparkSession",
+    catalog_name: str,
     database_name: str,
     table_name: str,
     table_comment: str,
     table_schema: "T.StructType",
     partition_columns: list[str] | None = None,
-) -> bool:
+) -> None:
     """Creates an Iceberg table if it does not already exist in the specified database.
 
-    Make sure to use a Spark session with a default metastore catalog defined (e.g., Hive catalog)
-    to ensure that the table is created and registered properly in the metastore.
+    Additionally, creates the database within the catalog if it does not exist. Make sure
+    to use a Spark session with an iceberg catalog and object storage configured.
 
     Parameters
     ----------
     spark : SparkSession
         The Spark session object, configured to use a catalog that supports Iceberg tables.
+    catalog_name : str
+        The name of the catalog where the database should be created.
     database_name : str
         The name of the database where the table should be created.
     table_name : str
@@ -37,51 +38,51 @@ def create_table_if_not_exists(
 
     Returns
     -------
-    bool
-        Returns True if the table was created, and False if the table already exists.
+    None
     """
-    # Creates the database if it doesn't exist
-    spark.sql(f"CREATE SCHEMA IF NOT EXISTS iceberg_catalog.{database_name}")
-    try:
-        # Check if the table exists in the catalog
-        spark.catalog.getTable(f"iceberg_catalog.{database_name}.{table_name}")
-        return False  # Table already exists
-    except AnalysisException:
-        # Table does not exist, proceed to create
-        create_table_sql = _create_table_statement(
-            database_name=database_name,
-            table_name=table_name,
-            table_comment=table_comment,
-            table_schema=table_schema,
-            partition_columns=partition_columns,
-        )
-        # Execute the SQL query
-        spark.sql(create_table_sql)
-        return True  # Table was created
+    # Creates the database if it does not exist
+    spark.sql(f"CREATE SCHEMA IF NOT EXISTS {catalog_name}.{database_name}")
+    # Creates the table if it does not exist
+    create_table_if_not_exist_sql = _create_table_if_not_exists_statement(
+        catalog_name=catalog_name,
+        database_name=database_name,
+        table_name=table_name,
+        table_comment=table_comment,
+        table_schema=table_schema,
+        partition_columns=partition_columns,
+    )
+    spark.sql(create_table_if_not_exist_sql)
 
 
-def read_table(spark: "SparkSession", database_name: str, table_name: str) -> "DataFrame":
-    """Reads a table from the specified database.
+def read_table(spark: "SparkSession", catalog_name: str, database_name: str, table_name: str) -> "DataFrame":
+    """Reads an Iceberg table from the specified database.
 
     Parameters
     ----------
     spark : SparkSession
-        The Spark session object, configured to use the default catalog.
+        The Spark session object, configured to use a catalog that supports Iceberg tables.
+    catalog_name : str
+        The name of the catalog, where the database is located.
     database_name : str
-        The name of the database where the table is located.
+        The name of the database, where the table is located.
     table_name : str
-        The name of the table to be read.
+        The name of the table to read.
 
     Returns
     -------
     DataFrame
         A PySpark DataFrame representing the table.
     """
-    return spark.sql(f"SELECT * FROM {database_name}.{table_name}")
+    return spark.sql(f"SELECT * FROM {catalog_name}.{database_name}.{table_name}")
 
 
 def merge_into_table(
-    spark: "SparkSession", source_df: "DataFrame", database_name: str, table_name: str, join_columns: list[str]
+    spark: "SparkSession",
+    source_df: "DataFrame",
+    catalog_name: str,
+    database_name: str,
+    table_name: str,
+    join_columns: list[str],
 ) -> bool:
     """Merges the source DataFrame into the target Iceberg table with update functionality.
 
@@ -91,10 +92,12 @@ def merge_into_table(
         The Spark session object, configured to use the default catalog.
     source_df : DataFrame
         The DataFrame containing new or updated data.
+    catalog_name : str
+        The name of the catalog where the database is located.
     database_name : str
-        The name of the database where the target table is located.
+        The name of the database where the table is located.
     table_name : str
-        The name of the target table for merging data.
+        The name of the target table.
     join_columns : List[str]
         A list of column names that are used to generate the join condition.
 
@@ -118,7 +121,7 @@ def merge_into_table(
     source_df.createOrReplaceTempView("source")
     join_condition = " AND ".join([f"target.{col} = source.{col}" for col in join_columns])
     merge_query = f"""
-        MERGE INTO {database_name}.{table_name} AS target
+        MERGE INTO {catalog_name}.{database_name}.{table_name} AS target
         USING source
         ON {join_condition}
         WHEN MATCHED THEN
@@ -130,16 +133,13 @@ def merge_into_table(
     return True
 
 
-def _create_clause(database_name: str, table_name: str, table_schema: "T.StructType") -> str:
-    query = f"CREATE TABLE IF NOT EXISTS iceberg_catalog.{database_name}.{table_name} ("
-
+def _create_clause(catalog_name: str, database_name: str, table_name: str, table_schema: "T.StructType") -> str:
+    query = f"CREATE TABLE IF NOT EXISTS {catalog_name}.{database_name}.{table_name} ("
     for field in table_schema:
         if not field.metadata or "comment" not in field.metadata or not field.metadata["comment"].strip():
             raise ValueError(f"Field '{field.name}' is missing a valid non-empty comment in the metadata.")
-
         field_comment = field.metadata["comment"].strip()
         query += f"\n  {field.name} {field.dataType.simpleString()} COMMENT '{field_comment}',"
-
     query = query.rstrip(",")  # Remove trailing comma
     query += "\n)"
     return query
@@ -147,33 +147,31 @@ def _create_clause(database_name: str, table_name: str, table_schema: "T.StructT
 
 def _partition_clause(partition_columns: list[str] | None) -> str:
     if partition_columns:
-        return f"PARTITIONED BY ({', '.join(partition_columns)})"
+        return f"\nPARTITIONED BY ({', '.join(partition_columns)})"
     else:
         return ""
 
 
-def _table_comment_clause(table_comment: str) -> str:
+def _comment_clause(table_comment: str) -> str:
     if table_comment.strip():
-        return f"COMMENT '{table_comment}'"
+        return f"\nCOMMENT '{table_comment}'"
     else:
         raise ValueError("Table comment cannot be empty or whitespace.")
 
 
-def _create_table_statement(
+def _create_table_if_not_exists_statement(
+    catalog_name: str,
     database_name: str,
     table_name: str,
     table_comment: str,
     table_schema: "T.StructType",
     partition_columns: list[str] | None = None,
 ) -> str:
-    create_clause = _create_clause(database_name, table_name, table_schema)
-    partition_clause = _partition_clause(partition_columns)
-    table_comment_clause = _table_comment_clause(table_comment) if table_comment else ""
-
-    final_query = create_clause
-    final_query += "\nUSING iceberg"
-    if partition_clause:
-        final_query += f"\n{partition_clause}"
-    final_query += f"\n{table_comment_clause}"
-
-    return final_query
+    return "".join(
+        [
+            _create_clause(catalog_name, database_name, table_name, table_schema),
+            "\nUSING iceberg",
+            _partition_clause(partition_columns),
+            _comment_clause(table_comment),
+        ]
+    )

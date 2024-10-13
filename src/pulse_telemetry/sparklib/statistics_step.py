@@ -61,6 +61,8 @@ statistics_step_schema = T.StructType(
     ]
 )  # fmt: skip
 statistics_step_schema_comment = "Aggregation of battery telemetry at the charge/discharge step level."
+statistics_step_composite_key = ["device_id", "test_id", "cycle_number", "step_number"]
+statistics_step_partitions = ["year(start_time)"]
 
 
 def statistics_step(df: "DataFrame") -> "DataFrame":
@@ -89,7 +91,7 @@ def statistics_step(df: "DataFrame") -> "DataFrame":
     # Calculating weighted averages using the duration__s column
     time_weighted_avg = lambda col: (F.sum(F.col(col) * F.col("duration__s")) / F.sum("duration__s"))  # noqa: E731
 
-    return df.groupBy("device_id", "test_id", "cycle_number", "step_number").agg(
+    return df.groupBy(*statistics_step_composite_key).agg(
         # Identifiers (groupby columns are already included)
         F.first("step_type", ignorenulls=True).alias("step_type"),
         F.first("step_id", ignorenulls=True).alias("step_id"),

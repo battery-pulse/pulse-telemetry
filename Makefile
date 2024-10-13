@@ -26,4 +26,4 @@ test-unit:
 
 .PHONY: test-integration
 test-integration:
-	pytest tests/integration/
+	pytest tests/integration/ -s

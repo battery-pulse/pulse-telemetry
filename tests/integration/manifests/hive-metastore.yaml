@@ -13,7 +13,6 @@ spec:
       dbType: derby
     s3:
       reference: minio
-
   metastore:
     roleGroups:
       default:

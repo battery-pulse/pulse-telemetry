@@ -58,6 +58,8 @@ statistics_cycle_schema = T.StructType(
     ]
 )  # fmt: skip
 statistics_cycle_schema_comment = "Aggregation of battery telemetry at the cycle level."
+statistics_cycle_composite_key = ["device_id", "test_id", "cycle_number"]
+statistics_cycle_partitions = ["year(start_time)"]
 
 
 def statistics_cycle(df: "DataFrame") -> "DataFrame":
@@ -86,7 +88,7 @@ def statistics_cycle(df: "DataFrame") -> "DataFrame":
     # Calculating weighted averages using the duration__s column
     time_weighted_avg = lambda col: (F.sum(F.col(col) * F.col("duration__s")) / F.sum("duration__s"))  # noqa: E731
 
-    return df.groupBy("device_id", "test_id", "cycle_number").agg(
+    return df.groupBy(*statistics_cycle_composite_key).agg(
         # Time
         F.min_by("start_time", "step_number").alias("start_time"),
         F.max_by("end_time", "step_number").alias("end_time"),

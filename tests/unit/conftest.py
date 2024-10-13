@@ -1,7 +1,7 @@
 import pytest
-from pulse_telemetry.sparklib.transformations.statistics_cycle import statistics_cycle
-from pulse_telemetry.sparklib.transformations.statistics_step import statistics_step
-from pulse_telemetry.sparklib.transformations.telemetry import telemetry_schema
+from pulse_telemetry.sparklib.statistics_cycle import statistics_cycle
+from pulse_telemetry.sparklib.statistics_step import statistics_step
+from pulse_telemetry.sparklib.telemetry import telemetry_schema
 from pulse_telemetry.utils import channel
 from pulse_telemetry.utils.telemetry_generator import telemetry_generator
 from pyspark.sql import DataFrame, SparkSession

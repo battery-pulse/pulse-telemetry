@@ -38,3 +38,5 @@ telemetry_schema = T.StructType(
     ]
 )  # fmt: skip
 telemetry_schema_comment = "Enriched individual telemetry records from the battery."
+telemetry_composite_key = ["device_id", "test_id", "cycle_number", "step_number", "record_number"]
+telemetry_partitions = ["device_id", "test_id", "month(timestamp)"]
