@@ -82,8 +82,8 @@ def merge_into_table(
     catalog_name: str,
     database_name: str,
     table_name: str,
-    join_columns: list[str],
-) -> bool:
+    match_columns: list[str],
+) -> None:
     """Merges the source DataFrame into the target Iceberg table with update functionality.
 
     Parameters
@@ -98,39 +98,25 @@ def merge_into_table(
         The name of the database where the table is located.
     table_name : str
         The name of the target table.
-    join_columns : List[str]
-        A list of column names that are used to generate the join condition.
+    match_columns : List[str]
+        A list of column names that are used to generate the match condition.
 
     Returns
     -------
-    bool
-        Returns True if the merge succeeds.
-
-    Example
-    -------
-    ```
-    merge_into_table(
-        spark=spark,
-        source_df=telemetry,
-        database_name="pulse",
-        table_name="telemetry",
-        join_columns=["device_id", "test_id", "cycle_number", "step_number", "record_number"]
-    )
-    ```
+    None
     """
     source_df.createOrReplaceTempView("source")
-    join_condition = " AND ".join([f"target.{col} = source.{col}" for col in join_columns])
+    match_condition = " AND ".join([f"target.{col} = source.{col}" for col in match_columns])
     merge_query = f"""
         MERGE INTO {catalog_name}.{database_name}.{table_name} AS target
         USING source
-        ON {join_condition}
+        ON {match_condition}
         WHEN MATCHED THEN
           UPDATE SET *
         WHEN NOT MATCHED THEN
           INSERT *
     """
     spark.sql(merge_query)
-    return True
 
 
 def _create_clause(catalog_name: str, database_name: str, table_name: str, table_schema: "T.StructType") -> str:
