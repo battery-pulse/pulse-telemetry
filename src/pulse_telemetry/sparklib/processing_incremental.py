@@ -1,7 +1,7 @@
 """Implements incramental processing for statistics_step and statistics_cycle. Partition
 pruning is implemented through the date partitions in telemetry and statistics_step:
 - telemetry (device_id, test_id, month)
-- statistics_step (device_id, year)
+- statistics_step (year)
 """
 
 import datetime
@@ -42,10 +42,10 @@ def processing_incremental(
         The aggregation function to apply to the source data, returning the sink data.
     group_by_columns: List[str]
         The columns that define a group in the source and a record in the sink.
-    partition_cutoff: str
-        The date (in string format, either "YYYY" or "YYYY-MM") cutoff for partition pruning.
+    partition_cutoff: datetime.datetime
+        The timestamp cutoff for partition pruning.
     partition_column: datetime.datetime
-        The name of the date column used for partitioning in the source table.
+        The name of the timestamp column used for partitioning in the source table.
     watermark_column: str
         The name of the timestamp column representing when records were processed by the system.
     watermark_buffer: datetime.timedelta
