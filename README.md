@@ -35,6 +35,8 @@ Aggregation of telemetry data at the cycle level:
 
 ## Developer Notes
 
+See the [developer guide](https://github.com/battery-pulse/developer-guide/blob/main/SETUP_GUIDE.md) for notes on configuring your development environment.
+
 ### Test Coverage
 
 - **Data Generators**: We've implemented mock data sources that can asynchronously produce data, configurable to emit data at a desired frequency, such as a series of test or asset channels.
