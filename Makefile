@@ -23,3 +23,7 @@ test-format:
 .PHONY: test-unit
 test-unit:
 	pytest tests/unit/
+
+.PHONY: test-integration
+test-integration:
+	pytest tests/integration/ -s
