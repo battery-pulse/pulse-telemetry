@@ -20,6 +20,7 @@ manifest_dir = os.path.join(current_dir, "manifests")
 def kind_cluster():
     # Setup a kind cluster
     subprocess.run(["kind", "create", "cluster"], check=True)
+    subprocess.run(["kubectl", "config", "set-context", "kind-kind"], check=True)
     yield
     # Teardown the kind cluster
     subprocess.run(["kind", "delete", "cluster"], check=True)
