@@ -20,8 +20,8 @@ def create_table_if_not_exists(
     Additionally:
      1. creates the database within the catalog if it does not exist. Additionally,
      2. alters the write order of the table (if no write order columns, than unordered)
-     3. does not alter the partition order of a table, if it exists 
-     
+     3. does not alter the partition order of a table, if it exists
+
     Make sure to use a Spark session with an iceberg catalog and object storage configured.
 
     Parameters

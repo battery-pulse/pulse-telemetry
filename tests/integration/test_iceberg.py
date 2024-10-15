@@ -1,6 +1,5 @@
 from pulse_telemetry.sparklib import iceberg, statistics_cycle, statistics_step, telemetry
 from pyspark.sql.utils import AnalysisException
-import pyspark.sql.functions as F
 
 
 def test_telemetry(spark_session, telemetry_df):
@@ -158,9 +157,7 @@ def test_merge_bad_data(spark_session, telemetry_df):
 
 def test_changing_write_order(spark_session, telemetry_df):
     # Check initial write order
-    result = spark_session.sql(
-        "SELECT record_number FROM lakehouse.dev.telemetry LIMIT 1"
-    ).collect()[0][0]
+    result = spark_session.sql("SELECT record_number FROM lakehouse.dev.telemetry LIMIT 1").collect()[0][0]
     assert result == 1, "Check initial write order"
     # Check that write order can be changed
     iceberg.create_table_if_not_exists(
@@ -182,9 +179,7 @@ def test_changing_write_order(spark_session, telemetry_df):
         table_name="telemetry",
         match_columns=telemetry.telemetry_composite_key,
     )
-    result = spark_session.sql(
-        "SELECT record_number FROM lakehouse.dev.telemetry LIMIT 1"
-    ).collect()[0][0]
+    result = spark_session.sql("SELECT record_number FROM lakehouse.dev.telemetry LIMIT 1").collect()[0][0]
     assert result != 1, "Check that write order can be changed"
 
 
@@ -192,7 +187,7 @@ def test_partitioning_can_not_be_changed(spark_session):
     # Check initial partitions
     result = spark_session.sql("DESCRIBE EXTENDED lakehouse.dev.telemetry")
     result = result.filter(result["col_name"].contains("Part ")).count()
-    assert result == 3,  "Check initial partitions"
+    assert result == 3, "Check initial partitions"
     # Check that partitions can not be changed after create
     iceberg.create_table_if_not_exists(
         spark=spark_session,
@@ -206,4 +201,4 @@ def test_partitioning_can_not_be_changed(spark_session):
     )
     result = spark_session.sql("DESCRIBE EXTENDED lakehouse.dev.telemetry")
     result = result.filter(result["col_name"].contains("Part ")).count()
-    assert result == 3,  "Check that partitions can not be changed after create"
+    assert result == 3, "Check that partitions can not be changed after create"
