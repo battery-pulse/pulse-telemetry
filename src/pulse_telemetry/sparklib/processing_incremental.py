@@ -44,7 +44,7 @@ def processing_incremental(
         The columns that define a group in the source and a record in the sink.
     partition_cutoff: datetime.datetime
         The timestamp cutoff for partition pruning.
-    partition_column: datetime.datetime
+    partition_column: str
         The name of the timestamp column used for partitioning in the source table.
     watermark_column: str
         The name of the timestamp column representing when records were processed by the system.
