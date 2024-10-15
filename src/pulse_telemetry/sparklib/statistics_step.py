@@ -60,9 +60,10 @@ statistics_step_schema = T.StructType(
         T.StructField("update_ts", dataType=T.TimestampType(), nullable=False, metadata={"comment": "Timestamp when the row was processed by the pulse telemetry application."}),
     ]
 )  # fmt: skip
-statistics_step_schema_comment = "Aggregation of battery telemetry at the charge/discharge step level."
+statistics_step_comment = "Aggregation of battery telemetry at the charge/discharge step level."
 statistics_step_composite_key = ["device_id", "test_id", "cycle_number", "step_number"]
 statistics_step_partitions = ["year(start_time)"]
+statistics_step_write_order = ["device_id", "test_id", "cycle_number", "step_number"]
 
 
 def statistics_step(df: "DataFrame") -> "DataFrame":

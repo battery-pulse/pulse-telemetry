@@ -17,9 +17,12 @@ def create_table_if_not_exists(
 ) -> None:
     """Creates an Iceberg table if it does not already exist in the specified database.
 
-    Additionally, creates the database within the catalog if it does not exist. Additionally,
-    alters the write order of the table. Make sure to use a Spark session with an iceberg catalog
-    and object storage configured.
+    Additionally:
+     1. creates the database within the catalog if it does not exist. Additionally,
+     2. alters the write order of the table (if no write order columns, than unordered)
+     3. does not alter the partition order of a table, if it exists 
+     
+    Make sure to use a Spark session with an iceberg catalog and object storage configured.
 
     Parameters
     ----------
@@ -64,6 +67,8 @@ def create_table_if_not_exists(
             write_order_columns=write_order_columns,
         )
         spark.sql(alter_table_write_order_sql)
+    else:
+        spark.sql(f"ALTER TABLE {catalog_name}.{database_name}.{table_name} WRITE UNORDERED")
 
 
 def read_table(spark: "SparkSession", catalog_name: str, database_name: str, table_name: str) -> "DataFrame":
@@ -97,6 +102,8 @@ def merge_into_table(
     match_columns: list[str],
 ) -> None:
     """Merges the source DataFrame into the target Iceberg table with update functionality.
+
+    Will raise an AnalysisException if the source schema does not match the target table.
 
     Parameters
     ----------

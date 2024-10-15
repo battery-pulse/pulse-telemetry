@@ -37,6 +37,7 @@ telemetry_schema = T.StructType(
         T.StructField("update_ts", dataType=T.TimestampType(), nullable=False, metadata={"comment": "Timestamp when the row was processed by the pulse telemetry application."}),
     ]
 )  # fmt: skip
-telemetry_schema_comment = "Enriched individual telemetry records from the battery."
+telemetry_comment = "Enriched individual telemetry records from the battery."
 telemetry_composite_key = ["device_id", "test_id", "cycle_number", "step_number", "record_number"]
 telemetry_partitions = ["device_id", "test_id", "month(timestamp)"]
+telemetry_write_order = ["cycle_number", "step_number", "record_number"]
