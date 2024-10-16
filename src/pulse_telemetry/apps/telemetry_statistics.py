@@ -1,95 +1,143 @@
-# import datetime
+import datetime
+import logging
 
-# from pyspark.sql import SparkSession
+from pyspark.sql import SparkSession
 
-# from pulse_telemetry.sparklib import iceberg, processing_incremental, statistics_cycle, statistics_step
+from pulse_telemetry.sparklib import iceberg, processing_incremental, statistics_cycle, statistics_step, telemetry
 
-
-# def spark():
-#     return (
-#         SparkSession.builder.appName("IntegrationTesting")
-#         # Iceberg and S3 packages
-#         .config(
-#             "spark.jars.packages",
-#             "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.6.0,org.apache.hadoop:hadoop-aws:3.3.4",
-#         )
-#         .config("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
-#         # Hive metastore configuration
-#         .config("spark.sql.catalog.lakehouse", "org.apache.iceberg.spark.SparkCatalog")
-#         .config("spark.sql.catalog.lakehouse.type", "hive")
-#         .config("spark.sql.catalog.lakehouse.uri", "thrift://localhost:9083")  # Hive Metastore
-#         .config("spark.sql.catalog.lakehouse.warehouse", "s3a://lakehouse/")
-#         # S3 configuration
-#         .config("spark.hadoop.fs.s3a.endpoint", "http://localhost:9000")  # MinIO
-#         .config("spark.hadoop.fs.s3a.access.key", "admin")
-#         .config("spark.hadoop.fs.s3a.secret.key", "adminadmin")
-#         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
-#         .config("spark.hadoop.fs.s3a.path.style.access", "true")
-#         .config("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider")
-#         # Timezone
-#         .config("spark.sql.session.timeZone", "UTC")
-#         .getOrCreate()
-#     )
+logger = logging.getLogger("pulse-telemetry")
 
 
-# def create_tables_if_not_exist():
-#     pass
+def create_tables_if_not_exist(spark: SparkSession, catalog_name: str, database_name: str):
+    logger.info("Creating tables...")
+    iceberg.create_table_if_not_exists(
+        spark=spark,
+        catalog_name=catalog_name,
+        database_name=database_name,
+        table_name="telemetry",
+        table_comment=telemetry.telemetry_comment,
+        table_schema=telemetry.telemetry_schema,
+        partition_columns=telemetry.telemetry_partitions,
+        write_order_columns=telemetry.telemetry_write_order,
+    )
+    iceberg.create_table_if_not_exists(
+        spark=spark,
+        catalog_name=catalog_name,
+        database_name=database_name,
+        table_name="statistics_step",
+        table_comment=statistics_step.statistics_step_comment,
+        table_schema=statistics_step.statistics_step_schema,
+        partition_columns=statistics_step.statistics_step_partitions,
+        write_order_columns=statistics_step.statistics_step_write_order,
+    )
+    iceberg.create_table_if_not_exists(
+        spark=spark,
+        catalog_name=catalog_name,
+        database_name=database_name,
+        table_name="statistics_cycle",
+        table_comment=statistics_cycle.statistics_cycle_comment,
+        table_schema=statistics_cycle.statistics_cycle_schema,
+        partition_columns=statistics_cycle.statistics_cycle_partitions,
+        write_order_columns=statistics_cycle.statistics_cycle_write_order,
+    )
+    logger.info("Tables created successfully.")
 
 
-# def process_statistics_step(spark):
-#     source = iceberg.read_table(spark=spark, catalog_name="lakehouse", database_name="dev", table_name="telemetry")
-#     sink = iceberg.read_table(spark=spark, catalog_name="lakehouse", database_name="dev", table_name="statistics_step")
-#     incremental = processing_incremental.processing_incremental(
-#         source=source,
-#         sink=sink,
-#         aggregation_function=statistics_step.statistics_step,
-#         group_by_columns=statistics_step.statistics_step_composite_key,
-#         partition_cutoff=datetime.datetime(2023, 1, 1, tzinfo=datetime.UTC),
-#         partition_column="timestamp",
-#         watermark_column="update_ts",
-#         watermark_buffer=datetime.timedelta(days=30),
-#     )
-#     iceberg.merge_into_table(
-#         spark=spark,
-#         source_df=incremental,
-#         catalog_name="lakehouse",
-#         database_name="dev",
-#         table_name="statistics_step",
-#         match_columns=statistics_step.statistics_step_composite_key,
-#     )
+def process_statistics_step(
+    spark: SparkSession,
+    catalog_name: str,
+    database_name: str,
+    watermark_buffer_minutes: int,
+    partition_cutoff_days: int,
+):
+    logger.info("Processing step statistics...")
+    source = iceberg.read_table(
+        spark=spark, catalog_name=catalog_name, database_name=database_name, table_name="telemetry"
+    )
+    sink = iceberg.read_table(
+        spark=spark, catalog_name=catalog_name, database_name=database_name, table_name="statistics_step"
+    )
+    incremental = processing_incremental.processing_incremental(
+        source=source,
+        sink=sink,
+        aggregation_function=statistics_step.statistics_step,
+        group_by_columns=statistics_step.statistics_step_composite_key,
+        partition_cutoff=datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=partition_cutoff_days),
+        partition_column="timestamp",
+        watermark_column="update_ts",
+        watermark_buffer=datetime.timedelta(minutes=watermark_buffer_minutes),
+    )
+    iceberg.merge_into_table(
+        spark=spark,
+        source_df=incremental,
+        catalog_name=catalog_name,
+        database_name=database_name,
+        table_name="statistics_step",
+        match_columns=statistics_step.statistics_step_composite_key,
+    )
+    logger.info("Step statistics processed successfully.")
 
 
-# def process_statistics_cycle(spark):
-#     source = iceberg.read_table(
-#         spark=spark, catalog_name="lakehouse", database_name="dev", table_name="statistics_step"
-#     )
-#     sink = iceberg.read_table(spark=spark, catalog_name="lakehouse", database_name="dev", table_name="statistics_cycle")
-#     incremental = processing_incremental.processing_incremental(
-#         source=source,
-#         sink=sink,
-#         aggregation_function=statistics_cycle.statistics_cycle,
-#         group_by_columns=statistics_cycle.statistics_cycle_composite_key,
-#         partition_cutoff=datetime.datetime(2023, 1, 1, tzinfo=datetime.UTC),
-#         partition_column="timestamp",
-#         watermark_column="update_ts",
-#         watermark_buffer=datetime.timedelta(days=30),
-#     )
-#     iceberg.merge_into_table(
-#         spark=spark,
-#         source_df=incremental,
-#         catalog_name="lakehouse",
-#         database_name="dev",
-#         table_name="statistics_cycle",
-#         match_columns=statistics_cycle.statistics_cycle_composite_key,
-#     )
+def process_statistics_cycle(
+    spark: SparkSession,
+    catalog_name: str,
+    database_name: str,
+    watermark_buffer_minutes: int,
+    partition_cutoff_days: int,
+):
+    logger.info("Processing cycle statistics...")
+    source = iceberg.read_table(
+        spark=spark, catalog_name=catalog_name, database_name=database_name, table_name="statistics_step"
+    )
+    sink = iceberg.read_table(
+        spark=spark, catalog_name=catalog_name, database_name=database_name, table_name="statistics_cycle"
+    )
+    incremental = processing_incremental.processing_incremental(
+        source=source,
+        sink=sink,
+        aggregation_function=statistics_cycle.statistics_cycle,
+        group_by_columns=statistics_cycle.statistics_cycle_composite_key,
+        partition_cutoff=datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=partition_cutoff_days),
+        partition_column="start_time",
+        watermark_column="update_ts",
+        watermark_buffer=datetime.timedelta(minutes=watermark_buffer_minutes),
+    )
+    iceberg.merge_into_table(
+        spark=spark,
+        source_df=incremental,
+        catalog_name=catalog_name,
+        database_name=database_name,
+        table_name="statistics_cycle",
+        match_columns=statistics_cycle.statistics_cycle_composite_key,
+    )
+    logger.info("Cycle statistics processed successfully.")
 
 
-# def main():
-#     spark_session = spark()
-#     create_tables_if_not_exist()
-#     process_statistics_step()
-#     process_statistics_cycle()
+def main(spark: SparkSession, catalog: str, database: str, watermark_buffer_minutes: int, partition_cutoff_days: int):
+    logger.info("Initiating telemetry statistics processing...")
+    logger.info(f"Catalog: {catalog}")
+    logger.info(f"Database: {database}")
+    logger.info(f"Watermark buffer (minutes): {watermark_buffer_minutes}")
+    logger.info(f"Partition cutoff (days): {partition_cutoff_days}")
+    create_tables_if_not_exist(spark, catalog, database)
+    process_statistics_step(spark, catalog, database, watermark_buffer_minutes, partition_cutoff_days)
+    process_statistics_cycle(spark, catalog, database, watermark_buffer_minutes, partition_cutoff_days)
+    logger.info("Telemetry statistics job completed.")
 
 
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    import os
+
+    catalog = os.environ["PULSE_TELEMETRY_CATALOG"]
+    database = os.environ["PULSE_TELEMETRY_DATABASE"]
+    watermark_buffer_minutes = int(os.environ["PULSE_TELEMETRY_WATERMARK_BUFFER"])
+    partition_cutoff_days = int(os.environ["PULSE_TELEMETRY_PARTITION_BUFFER"])
+
+    spark = SparkSession.builder.appName("TelemetryStatistics").getOrCreate()
+    main(
+        spark=spark,
+        catalog=catalog,
+        database=database,
+        watermark_buffer_minutes=watermark_buffer_minutes,
+        partition_cutoff_days=partition_cutoff_days,
+    )

@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: telemetry-statistics-config
+data:
+  PULSE_TELEMETRY_CATALOG: "lakehouse"
+  PULSE_TELEMETRY_DATABASE: "dev"
+  PULSE_TELEMETRY_WATERMARK_BUFFER: "60"  # in minutes
+  PULSE_TELEMETRY_PARTITION_BUFFER: "30"  # in days
