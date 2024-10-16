@@ -1,11 +1,14 @@
 import datetime
 import logging
+import sys
 
 from pyspark.sql import SparkSession
 
 from pulse_telemetry.sparklib import iceberg, processing_incremental, statistics_cycle, statistics_step, telemetry
 
 logger = logging.getLogger("pulse-telemetry")
+logger.addHandler(logging.StreamHandler(sys.stdout))
+logger.setLevel(logging.INFO)
 
 
 def create_tables_if_not_exist(spark: SparkSession, catalog_name: str, database_name: str):
