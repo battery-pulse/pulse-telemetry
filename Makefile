@@ -27,3 +27,7 @@ test-unit:
 .PHONY: test-integration
 test-integration:
 	pytest tests/integration/ -s
+
+.PHONY: docker-image
+docker-image:
+	docker build -t pulse-telemetry:latest .
