@@ -1,5 +1,3 @@
-
-
 def test_telemetry_statistics():
     pass
 

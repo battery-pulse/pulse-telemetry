@@ -8,7 +8,7 @@ authors = [
 ]
 dynamic = ["version"]
 dependencies = [
-    "pyspark==3.5.3",
+    "pyspark==3.5.1",
 ]
 
 [project.optional-dependencies]

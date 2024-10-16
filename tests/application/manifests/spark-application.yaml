@@ -1,0 +1,43 @@
+apiVersion: spark.stackable.tech/v1alpha1
+kind: SparkApplication
+metadata:
+  name: pyspark-pi
+  namespace: default
+spec:
+  sparkImage:
+    custom: "pulse-telemetry:latest" 
+    productVersion: "3.5.1" 
+    pullPolicy: IfNotPresent
+  mainApplicationFile: local:///pulse-telemetry/src/app/telemetry_statistics.py
+  args:
+    - ""
+  sparkConf:
+    spark.sql.extensions: org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions
+    spark.sql.catalog.spark_catalog: org.apache.iceberg.spark.SparkSessionCatalog
+    spark.sql.catalog.spark_catalog.type: hive
+    spark.sql.catalog.local: org.apache.iceberg.spark.SparkCatalog
+    spark.sql.catalog.local.type: hadoop
+    spark.sql.catalog.local.warehouse: /tmp/warehouse
+  deps:
+    packages:
+      - org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.6.1
+  mode: cluster
+  s3connection:
+    reference: minio
+  driver:
+    config:
+      resources:
+        cpu:
+          min: "1"
+          max: "2"
+        memory:
+          limit: "1Gi"
+  executor:
+    replicas: 1
+    config:
+      resources:
+        cpu:
+          min: "1"
+          max: "2"
+        memory:
+          limit: "1Gi"
