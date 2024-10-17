@@ -17,6 +17,15 @@ manifest_dir = os.path.join(current_dir, "manifests")
 project_dir = os.path.abspath(os.path.join(current_dir, "../../."))
 
 
+def launch_spark_application(application_name: str, manifest_file_name: str, timeout_seconds: str):
+    launch_script_path = os.path.join(scripts_dir, "launch-spark-application.sh")
+    subprocess.run(
+        [launch_script_path, "-a", application_name, "-f", manifest_file_name, "-t", timeout_seconds],
+        cwd=manifest_dir,
+        check=True,
+    )
+
+
 @pytest.fixture(scope="session")
 def kind_cluster():
     # Setup a kind cluster

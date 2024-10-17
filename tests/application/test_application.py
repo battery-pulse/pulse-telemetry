@@ -3,16 +3,7 @@ import subprocess
 
 from pulse_telemetry.sparklib import iceberg, telemetry
 
-from .conftest import manifest_dir, scripts_dir
-
-
-def launch_spark_application(application_name: str, manifest_file_name: str, timeout_seconds: str):
-    launch_script_path = os.path.join(scripts_dir, "launch-spark-application.sh")
-    subprocess.run(
-        [launch_script_path, "-a", application_name, "-f", manifest_file_name, "-t", timeout_seconds],
-        cwd=manifest_dir,
-        check=True,
-    )
+from .conftest import launch_spark_application
 
 
 def test_telemetry_statistics(
