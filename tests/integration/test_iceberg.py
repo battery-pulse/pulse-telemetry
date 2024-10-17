@@ -1,4 +1,6 @@
+import pyspark.sql.functions as F
 from pulse_telemetry.sparklib import iceberg, statistics_cycle, statistics_step, telemetry
+from pyspark.sql import Window
 from pyspark.sql.utils import AnalysisException
 
 
@@ -179,8 +181,11 @@ def test_changing_write_order(spark_session, telemetry_df):
         table_name="telemetry",
         match_columns=telemetry.telemetry_composite_key,
     )
-    result = spark_session.sql("SELECT record_number FROM lakehouse.dev.telemetry LIMIT 1").collect()[0][0]
-    assert result != 1, "Check that write order can be changed"
+    telemetry_table = spark_session.sql("SELECT record_number FROM lakehouse.dev.telemetry")
+    window_spec = Window.orderBy("record_number")
+    unordered_df = telemetry_table.withColumn("prev_record", F.lag("record_number").over(window_spec))
+    unordered_check = unordered_df.filter(F.col("record_number") > F.col("prev_record")).count()
+    assert unordered_check > 5, "Data should not be ordered in ascending order"
 
 
 def test_partitioning_can_not_be_changed(spark_session):

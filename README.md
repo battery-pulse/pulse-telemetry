@@ -33,6 +33,11 @@ Aggregation of telemetry data at the cycle level:
 - **User-Defined Data**: aggregated auxiliary measurements and metadata.
 
 
+## Supported Test Vendors
+
+Coming soon...
+
+
 ## Developer Notes
 
 See the [developer guide](https://github.com/battery-pulse/developer-guide/blob/main/SETUP_GUIDE.md) for notes on configuring your development environment.
@@ -43,7 +48,7 @@ See the [developer guide](https://github.com/battery-pulse/developer-guide/blob/
 
 - **Unit Tests**: Validate the correctness of individual transformations, ensuring each transformation produces correct values and handles edge cases, such as null values or empty input data.
 
-- **Integration Tests**: Verify the data source and sink connectors, ensuring that the application can successfully connect to, read from, and write to external systems. These tests rely on Hive and Minio running in a local kind cluster.
+- **Integration Tests**: Verify the data source and sink connectors, ensuring that the application can successfully connect to, read from, and write to external systems. Rely on Hive and Minio running in a local kind cluster.
 
 - **Application Tests**: Confirm the behavior of applications within Kubernetes, ensuring that Spark applications are correctly deployed as custom resources. These tests check the end-to-end functionality, from deployment to data processing, ensuring that the applications behave as expected when deployed in the cluster.
 
