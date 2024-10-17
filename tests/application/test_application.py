@@ -1,6 +1,3 @@
-import os
-import subprocess
-
 from pulse_telemetry.sparklib import iceberg, telemetry
 
 from .conftest import launch_spark_application
@@ -47,5 +44,8 @@ def test_telemetry_statistics(
     ), "Running the app with data should populate tables - statistics_cycle"
 
 
-def test_table_maintenance():
-    pass
+def test_table_maintenance(kubernetes_services):
+    # Expecting no errors from application
+    launch_spark_application(
+        application_name="table-maintenance", manifest_file_name="table-maintenance.yaml", timeout_seconds="240"
+    )

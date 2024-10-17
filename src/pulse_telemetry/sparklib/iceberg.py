@@ -138,6 +138,39 @@ def merge_into_table(
     spark.sql(merge_query)
 
 
+def expire_snapshots(
+    spark: "SparkSession",
+    catalog_name: str,
+    database_name: str,
+    table_name: str,
+):
+    """Table maintenance function to mark snapshots in the metadata as expired.
+    """
+    spark.sql("")
+
+
+def remove_orphan_files(
+    spark: "SparkSession",
+    catalog_name: str,
+    database_name: str,
+    table_name: str,
+):
+    """Table maintenance function to remove files that are marked as valid in the metadata.
+    """
+    spark.sql("")
+
+
+def rewrite_data_files(
+    spark: "SparkSession",
+    catalog_name: str,
+    database_name: str,
+    table_name: str,
+):
+    """Table maintenance function to rewrite data files based on size rules.
+    """
+    spark.sql("")
+
+
 def _create_clause(catalog_name: str, database_name: str, table_name: str, table_schema: "T.StructType") -> str:
     query = f"CREATE TABLE IF NOT EXISTS {catalog_name}.{database_name}.{table_name} ("
     for field in table_schema:

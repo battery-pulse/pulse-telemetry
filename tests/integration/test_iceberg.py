@@ -207,3 +207,44 @@ def test_partitioning_can_not_be_changed(spark_session):
     result = spark_session.sql("DESCRIBE EXTENDED lakehouse.dev.telemetry")
     result = result.filter(result["col_name"].contains("Part ")).count()
     assert result == 3, "Check that partitions can not be changed after create"
+
+
+def test_table_maintenance(spark_session, telemetry_df):
+    # Check initial metadata and file system
+    iceberg.create_table_if_not_exists(
+        spark=spark_session,
+        catalog_name="lakehouse",
+        database_name="table_maintenance",  # fresh database for this test
+        table_name="telemetry",
+        table_comment=telemetry.telemetry_comment,
+        table_schema=telemetry.telemetry_schema,
+        partition_columns=telemetry.telemetry_partitions,
+        write_order_columns=telemetry.telemetry_write_order,
+    )
+    iceberg.merge_into_table(
+        spark=spark_session,
+        source_df=telemetry_df,
+        catalog_name="lakehouse",
+        database_name="dev",
+        table_name="telemetry",
+        match_columns=telemetry.telemetry_composite_key,
+    )
+    # Check number of expired snapshots after new data
+    iceberg.expire_snapshots(
+        spark=spark_session,
+        catalog_name="lakehouse",
+        database_name="dev",
+        table_name="telemetry",
+    )
+    iceberg.remove_orphan_files(
+        spark=spark_session,
+        catalog_name="lakehouse",
+        database_name="dev",
+        table_name="telemetry",
+    )
+    iceberg.rewrite_data_files(
+        spark=spark_session,
+        catalog_name="lakehouse",
+        database_name="dev",
+        table_name="telemetry",
+    )
