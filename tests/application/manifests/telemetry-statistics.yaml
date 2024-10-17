@@ -1,14 +1,13 @@
 apiVersion: spark.stackable.tech/v1alpha1
 kind: SparkApplication
 metadata:
-  name: pyspark-pi
-  namespace: default
+  name: telemetry-statistics
 spec:
   sparkImage:
     custom: "pulse-telemetry:latest" 
     productVersion: "3.5.1" 
     pullPolicy: IfNotPresent
-  mainApplicationFile: local:///pulse-telemetry/src/app/telemetry_statistics.py
+  mainApplicationFile: local:////pulse-telemetry/src/pulse_telemetry/apps/telemetry_statistics.py
   env:
     - name: PULSE_TELEMETRY_CATALOG
       valueFrom:
@@ -34,7 +33,7 @@ spec:
     spark.sql.extensions: org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions
     spark.sql.catalog.lakehouse: org.apache.iceberg.spark.SparkCatalog
     spark.sql.catalog.lakehouse.type: hive
-    spark.sql.catalog.lakehouse.uri: thrift://hive-metastore:9083
+    spark.sql.catalog.lakehouse.uri: thrift://hive-metastore.default.svc:9083
     spark.sql.catalog.lakehouse.warehouse: s3a://lakehouse/
     spark.sql.session.timeZone: UTC
   deps:
@@ -61,3 +60,13 @@ spec:
           max: "2"
         memory:
           limit: "1Gi"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: telemetry-statistics-config
+data:
+  PULSE_TELEMETRY_CATALOG: "lakehouse"
+  PULSE_TELEMETRY_DATABASE: "dev"
+  PULSE_TELEMETRY_WATERMARK_BUFFER: "60"  # in minutes
+  PULSE_TELEMETRY_PARTITION_BUFFER: "30"  # in days

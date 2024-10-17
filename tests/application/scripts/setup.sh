@@ -48,6 +48,8 @@ echo "Deploying stackable operators..."
 helm install secret-operator stackable/secret-operator --version 24.7.0
 helm install commons-operator stackable/commons-operator --version 24.7.0
 helm install hive-operator stackable/hive-operator --version 24.7.0
+helm install spark-k8s-operator stackable/spark-k8s-operator --version 24.7.0
+
 
 # Deploy minio service
 echo "Deploying minio..."
@@ -68,10 +70,13 @@ echo "Waiting for minio pod..."
 sleep 2
 wait_for_pod_ready "app=minio"
 
+# Deploy s3 connection
+echo "Deploying s3 connection..."
+kubectl apply -f s3-connection.yaml
+
 # Deploy hive service
 echo "Deploying hive..."
 kubectl apply -f hive-metastore.yaml
 echo "Waiting for hive pod..."
 sleep 30
 wait_for_pod_ready "app.kubernetes.io/name=hive"
-# kubectl wait --for=condition=ready pod/hive-metastore-metastore-default-0 --timeout=300s
