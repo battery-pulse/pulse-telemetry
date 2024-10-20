@@ -1,3 +1,5 @@
+import datetime
+
 import pyspark.sql.functions as F
 from pulse_telemetry.sparklib import iceberg, statistics_cycle, statistics_step, telemetry
 from pyspark.sql import Window
@@ -210,11 +212,11 @@ def test_partitioning_can_not_be_changed(spark_session):
 
 
 def test_table_maintenance(spark_session, telemetry_df):
-    # Check initial metadata and file system
+    # Sets up table for testing
     iceberg.create_table_if_not_exists(
         spark=spark_session,
         catalog_name="lakehouse",
-        database_name="table_maintenance",  # fresh database for this test
+        database_name="dev_table_maintenance",  # fresh database for this test
         table_name="telemetry",
         table_comment=telemetry.telemetry_comment,
         table_schema=telemetry.telemetry_schema,
@@ -225,26 +227,79 @@ def test_table_maintenance(spark_session, telemetry_df):
         spark=spark_session,
         source_df=telemetry_df,
         catalog_name="lakehouse",
-        database_name="dev",
+        database_name="dev_table_maintenance",
         table_name="telemetry",
         match_columns=telemetry.telemetry_composite_key,
     )
-    # Check number of expired snapshots after new data
-    iceberg.expire_snapshots(
+    # Not expecting any maintenance with fresh data
+    result = iceberg.expire_snapshots(
         spark=spark_session,
         catalog_name="lakehouse",
-        database_name="dev",
+        database_name="dev_table_maintenance",
         table_name="telemetry",
+        older_than=datetime.datetime.now(tz=datetime.UTC),
+        retain_last=1,
     )
-    iceberg.remove_orphan_files(
+    assert result == 0
+    result = iceberg.remove_orphan_files(
         spark=spark_session,
         catalog_name="lakehouse",
-        database_name="dev",
+        database_name="dev_table_maintenance",
         table_name="telemetry",
+        older_than=datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(days=1),  # 24 hr limit for orphans
     )
-    iceberg.rewrite_data_files(
+    assert result == 0
+    result = iceberg.rewrite_data_files(
         spark=spark_session,
         catalog_name="lakehouse",
-        database_name="dev",
+        database_name="dev_table_maintenance",
         table_name="telemetry",
     )
+    assert result == 0
+    result = iceberg.rewrite_manifests(
+        spark=spark_session,
+        catalog_name="lakehouse",
+        database_name="dev_table_maintenance",
+        table_name="telemetry",
+    )
+    assert result == 0
+    # Expecting maintenance after successive merge
+    iceberg.merge_into_table(
+        spark=spark_session,
+        source_df=telemetry_df,
+        catalog_name="lakehouse",
+        database_name="dev_table_maintenance",
+        table_name="telemetry",
+        match_columns=telemetry.telemetry_composite_key,
+    )
+    result = iceberg.expire_snapshots(
+        spark=spark_session,
+        catalog_name="lakehouse",
+        database_name="dev_table_maintenance",
+        table_name="telemetry",
+        older_than=datetime.datetime.now(tz=datetime.UTC),
+        retain_last=1,
+    )
+    assert result == 5  # 5 partitions
+    result = iceberg.remove_orphan_files(
+        spark=spark_session,
+        catalog_name="lakehouse",
+        database_name="dev_table_maintenance",
+        table_name="telemetry",
+        older_than=datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(days=1),  # 24 hr limit for orphans
+    )
+    assert result == 0
+    result = iceberg.rewrite_data_files(
+        spark=spark_session,
+        catalog_name="lakehouse",
+        database_name="dev_table_maintenance",
+        table_name="telemetry",
+    )
+    assert result == 0
+    result = iceberg.rewrite_manifests(
+        spark=spark_session,
+        catalog_name="lakehouse",
+        database_name="dev_table_maintenance",
+        table_name="telemetry",
+    )
+    assert result == 3

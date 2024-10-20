@@ -1,6 +1,8 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    import datetime
+
     import pyspark.sql.types as T
     from pyspark.sql import DataFrame, SparkSession
 
@@ -108,7 +110,7 @@ def merge_into_table(
     Parameters
     ----------
     spark : SparkSession
-        The Spark session object, configured to use the default catalog.
+        The Spark session object, configured to use a catalog that supports Iceberg tables.
     source_df : DataFrame
         The DataFrame containing new or updated data.
     catalog_name : str
@@ -143,10 +145,44 @@ def expire_snapshots(
     catalog_name: str,
     database_name: str,
     table_name: str,
-):
-    """Table maintenance function to mark snapshots in the metadata as expired.
+    older_than: "datetime.datetime",
+    retain_last: int,
+    max_concurrent_deletes: int = 8,
+) -> int:
     """
-    spark.sql("")
+    Removes old snapshots from the specified Iceberg table.
+
+    Parameters
+    ----------
+    spark : SparkSession
+        The Spark session object, configured to use a catalog that supports Iceberg tables.
+    catalog_name : str
+        The name of the catalog where the database is located.
+    database_name : str
+        The name of the database where the table is located.
+    table_name : str
+        The name of the target table from which snapshots will be expired.
+    older_than : datetime
+        A datetime object specifying the cutoff for snapshot expiration.
+    retain_last : int
+        The minimum number of most recent snapshots to retain.
+    max_concurrent_deletes : int
+        The maximum number of concurrent delete threads for file deletion.
+
+    Returns
+    -------
+    int
+        The number of data files deleted during snapshot expiration.
+    """
+    older_than_str = older_than.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+    return spark.sql(f"""
+        CALL {catalog_name}.system.expire_snapshots(
+            table => '{database_name}.{table_name}',
+            older_than => TIMESTAMP '{older_than_str}',
+            retain_last => {retain_last},
+            max_concurrent_deletes => {max_concurrent_deletes}
+        )
+    """).collect()[0]["deleted_data_files_count"]
 
 
 def remove_orphan_files(
@@ -154,10 +190,40 @@ def remove_orphan_files(
     catalog_name: str,
     database_name: str,
     table_name: str,
-):
-    """Table maintenance function to remove files that are marked as valid in the metadata.
+    older_than: "datetime.datetime",
+    max_concurrent_deletes: int = 8,
+) -> int:
     """
-    spark.sql("")
+    Removes orphaned files from the specified Iceberg table.
+
+    Parameters
+    ----------
+    spark : SparkSession
+        The Spark session object, configured to use a catalog that supports Iceberg tables.
+    catalog_name : str
+        The name of the catalog where the database is located.
+    database_name : str
+        The name of the database where the table is located.
+    table_name : str
+        The name of the target table from which orphaned files will be removed.
+    older_than : datetime
+        A datetime object specifying the cutoff for orphaned file removal.
+    max_concurrent_deletes : int
+        The maximum number of concurrent delete threads for file deletion during orphaned file removal.
+
+    Returns
+    -------
+    int
+        The count of orphaned files removed during the operation.
+    """
+    older_than_str = older_than.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+    return spark.sql(f"""
+        CALL {catalog_name}.system.remove_orphan_files(
+            table => '{database_name}.{table_name}',
+            older_than => TIMESTAMP '{older_than_str}',
+            max_concurrent_deletes => {max_concurrent_deletes}
+        )
+    """).count()
 
 
 def rewrite_data_files(
@@ -165,10 +231,68 @@ def rewrite_data_files(
     catalog_name: str,
     database_name: str,
     table_name: str,
-):
-    """Table maintenance function to rewrite data files based on size rules.
+) -> int:
     """
-    spark.sql("")
+    Rewrites data files from the specified Iceberg table.
+
+    Uses the 'sort' strategy and defaults to the table's sort-order.
+
+    Parameters
+    ----------
+    spark : SparkSession
+        The Spark session object, configured to use a catalog that supports Iceberg tables.
+    catalog_name : str
+        The name of the catalog where the database is located.
+    database_name : str
+        The name of the database where the table is located.
+    table_name : str
+        The name of the target table from which orphaned files will be removed.
+
+    Returns
+    -------
+    int
+        The sum of the rewritten and new data files.
+    """
+    result = spark.sql(f"""
+        CALL {catalog_name}.system.rewrite_data_files(
+            table => '{database_name}.{table_name}',
+            strategy => 'sort'
+        )
+    """).collect()[0]
+    return result["rewritten_data_files_count"] + result["added_data_files_count"]
+
+
+def rewrite_manifests(
+    spark: "SparkSession",
+    catalog_name: str,
+    database_name: str,
+    table_name: str,
+) -> int:
+    """
+    Rewrites manifest files from the specified Iceberg table.
+
+    Parameters
+    ----------
+    spark : SparkSession
+        The Spark session object, configured to use a catalog that supports Iceberg tables.
+    catalog_name : str
+        The name of the catalog where the database is located.
+    database_name : str
+        The name of the database where the table is located.
+    table_name : str
+        The name of the target table from which orphaned files will be removed.
+
+    Returns
+    -------
+    int
+        The sum of the rewritten and new manifest files.
+    """
+    result = spark.sql(f"""
+        CALL {catalog_name}.system.rewrite_manifests(
+            table => '{database_name}.{table_name}'
+        )
+    """).collect()[0]
+    return result["rewritten_manifests_count"] + result["added_manifests_count"]
 
 
 def _create_clause(catalog_name: str, database_name: str, table_name: str, table_schema: "T.StructType") -> str:

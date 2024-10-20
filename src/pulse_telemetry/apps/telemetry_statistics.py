@@ -133,8 +133,8 @@ if __name__ == "__main__":
 
     catalog = os.environ["PULSE_TELEMETRY_CATALOG"]
     database = os.environ["PULSE_TELEMETRY_DATABASE"]
-    watermark_buffer_minutes = int(os.environ["PULSE_TELEMETRY_WATERMARK_BUFFER"])
-    partition_cutoff_days = int(os.environ["PULSE_TELEMETRY_PARTITION_BUFFER"])
+    watermark_buffer_minutes = int(os.environ["PULSE_TELEMETRY_WATERMARK_BUFFER_MINUTES"])
+    partition_cutoff_days = int(os.environ["PULSE_TELEMETRY_PARTITION_CUTOFF_DAYS"])
 
     spark = SparkSession.builder.appName("TelemetryStatistics").getOrCreate()
     main(

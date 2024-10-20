@@ -19,16 +19,16 @@ spec:
         configMapKeyRef:
           name: telemetry-statistics-config
           key: PULSE_TELEMETRY_DATABASE
-    - name: PULSE_TELEMETRY_WATERMARK_BUFFER
+    - name: PULSE_TELEMETRY_WATERMARK_BUFFER_MINUTES
       valueFrom:
         configMapKeyRef:
           name: telemetry-statistics-config
-          key: PULSE_TELEMETRY_WATERMARK_BUFFER
-    - name: PULSE_TELEMETRY_PARTITION_BUFFER
+          key: PULSE_TELEMETRY_WATERMARK_BUFFER_MINUTES
+    - name: PULSE_TELEMETRY_PARTITION_CUTOFF_DAYS
       valueFrom:
         configMapKeyRef:
           name: telemetry-statistics-config
-          key: PULSE_TELEMETRY_PARTITION_BUFFER
+          key: PULSE_TELEMETRY_PARTITION_CUTOFF_DAYS
   sparkConf:
     spark.sql.extensions: org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions
     spark.sql.catalog.lakehouse: org.apache.iceberg.spark.SparkCatalog
@@ -68,5 +68,5 @@ metadata:
 data:
   PULSE_TELEMETRY_CATALOG: "lakehouse"
   PULSE_TELEMETRY_DATABASE: "dev"
-  PULSE_TELEMETRY_WATERMARK_BUFFER: "60"  # in minutes
-  PULSE_TELEMETRY_PARTITION_BUFFER: "30"  # in days
+  PULSE_TELEMETRY_WATERMARK_BUFFER_MINUTES: "60"  # in minutes
+  PULSE_TELEMETRY_PARTITION_CUTOFF_DAYS: "30"  # in days
