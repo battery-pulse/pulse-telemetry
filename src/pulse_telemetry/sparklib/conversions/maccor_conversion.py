@@ -6,7 +6,7 @@ import pyspark.sql.types as T
 from pyspark.sql.window import Window as W
 
 if TYPE_CHECKING:
-    from pyspark.sql import Column, DataFrame
+    from pyspark.sql import Column, DataFrame, SparkSession
     from pyspark.sql.window import WindowSpec
 
 
@@ -14,10 +14,12 @@ def _differential(col: str, window: "WindowSpec", multiplier: float = 1.0) -> "C
     return F.col(col) * F.lit(multiplier) - F.lag(col).over(window) * F.lit(multiplier)
 
 
-def maccor_to_telemetry(raw_df: "DataFrame", schema: T.StructType) -> "DataFrame":
+def maccor_to_telemetry(spark: "SparkSession", raw_df: "DataFrame", schema: T.StructType) -> "DataFrame":
     """Converts Maccor raw schema to telemetry schema. Assumes columns "device_id" and "test_id".
     User should extract these values from the file name with a given pattern.
     """
+    if raw_df.isEmpty():
+        return spark.createDataFrame(data=[], schema=schema)
     cols = raw_df.columns
     var_cols = [F.lit("Maccor").alias("cycler_type")] + [i for i in cols if "var" in i.lower()]  # Maccor variables
     aux_cols = [i for i in cols if "auxiliary" in i.lower()]  # Aux temperatures
