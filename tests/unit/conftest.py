@@ -1,3 +1,5 @@
+import os.path
+
 import pytest
 from pulse_telemetry.sparklib.statistics_cycle import statistics_cycle
 from pulse_telemetry.sparklib.statistics_step import statistics_step
@@ -5,6 +7,9 @@ from pulse_telemetry.sparklib.telemetry import telemetry_schema
 from pulse_telemetry.utils import channel
 from pulse_telemetry.utils.telemetry_generator import telemetry_generator
 from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql.functions import input_file_name, lit, regexp_replace, split_part
+
+__here__ = os.path.dirname(__file__)
 
 
 @pytest.fixture(scope="session")
@@ -43,3 +48,19 @@ def statistics_step_df(telemetry_df) -> DataFrame:
 @pytest.fixture(scope="session")
 def statistics_cycle_df(statistics_step_df) -> DataFrame:
     return statistics_cycle(statistics_step_df)
+
+
+@pytest.fixture(scope="session")
+def maccor_raw_data(spark_session) -> DataFrame:
+    return (
+        spark_session.read.format("csv")
+        .option("header", "true")
+        .option("inferSchema", "true")
+        .load(f"{__here__}/conversions/test_files/UM_Internal_0620_-_BL_Form_-_Cycling_Cell_19.010.csv")
+        .withColumns(
+            {
+                "device_id": lit("dummy_channel"),
+                "test_id": regexp_replace(split_part(input_file_name(), lit("/"), lit(-1)), ".csv", ""),
+            }
+        )
+    )

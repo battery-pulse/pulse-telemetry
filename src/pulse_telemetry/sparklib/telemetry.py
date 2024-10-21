@@ -17,9 +17,9 @@ telemetry_schema = T.StructType(
         T.StructField("power__W", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Instantaneous power in Watts. Negative is discharge."}),
         # Differential quantities
         T.StructField("duration__s", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Time change from the previous record in Seconds."}),
-        T.StructField("voltage_delta__V", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Change in voltage from the previous record in Volts."}),
-        T.StructField("current_delta__A", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Change in current from the previous record in Amps."}),
-        T.StructField("power_delta__W", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Change in power from the previous record in Watts."}),
+        T.StructField("voltage_delta__V", dataType=T.DoubleType(), nullable=True, metadata={"comment": "Change in voltage from the previous record in Volts."}),
+        T.StructField("current_delta__A", dataType=T.DoubleType(), nullable=True, metadata={"comment": "Change in current from the previous record in Amps."}),
+        T.StructField("power_delta__W", dataType=T.DoubleType(), nullable=True, metadata={"comment": "Change in power from the previous record in Watts."}),
         T.StructField("capacity_charged__Ah", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Unsigned capacity (in Amp-hours) accumulated since the previous record under charge conditions."}),
         T.StructField("capacity_discharged__Ah", dataType=T.DoubleType(), nullable=False, metadata={"comment": "Unsigned capacity (in Amp-hours) accumulated since the previous record under discharge conditions."}),
         T.StructField("differential_capacity_charged__Ah_V", dataType=T.DoubleType(), nullable=True, metadata={"comment": "Differential capacity (in Amp-hours per Volt) derived from the charged capacity."}),
