@@ -1,9 +1,3 @@
-"""Implements incramental processing for statistics_step and statistics_cycle. Partition
-pruning is implemented through the date partitions in telemetry and statistics_step:
-- telemetry (device_id, test_id, month)
-- statistics_step (year)
-"""
-
 import datetime
 from typing import TYPE_CHECKING
 
