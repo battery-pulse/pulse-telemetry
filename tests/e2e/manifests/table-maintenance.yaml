@@ -47,6 +47,7 @@ spec:
     config:
       resources:
         cpu:
+          min: "100m"
           max: "2"
         memory:
           limit: "1Gi"
@@ -55,6 +56,7 @@ spec:
     config:
       resources:
         cpu:
+          min: "100m"
           max: "2"
         memory:
           limit: "1Gi"

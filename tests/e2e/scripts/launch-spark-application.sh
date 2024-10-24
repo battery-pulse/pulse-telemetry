@@ -51,6 +51,7 @@ if kubectl wait pods -l "job-name=$SPARK_APP_NAME" \
   fi
 
 else
+  kubectl get pods
   echo "SparkApplication failed or timed out."
   echo "Removing spark custom resource..."
   kubectl delete -f "$MANIFEST_FILE"
