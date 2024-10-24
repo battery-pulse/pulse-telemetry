@@ -26,11 +26,11 @@ test-unit:
 
 .PHONY: test-integration
 test-integration:
-	pytest tests/integration/ -s
+	pytest tests/integration/ -s --log-cli-level=INFO
 
 .PHONY: test-e2e
 test-e2e:
-	pytest tests/e2e/ -s
+	pytest tests/e2e/ -s --log-cli-level=INFO
 
 .PHONY: docker-image
 docker-image:
