@@ -1,16 +1,13 @@
 import concurrent.futures
 import datetime
 import functools
-import logging
-import sys
 
 from pyspark.sql import SparkSession
 
+import pulse_telemetry.logging
 from pulse_telemetry.sparklib import iceberg
 
-logger = logging.getLogger("pulse-telemetry")
-logger.addHandler(logging.StreamHandler(sys.stdout))
-logger.setLevel(logging.INFO)
+logger = pulse_telemetry.logging.get_logger()
 
 
 class NoTablesFoundError(Exception):
