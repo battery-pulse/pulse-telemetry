@@ -34,6 +34,7 @@ select = [
     # pyflakes
     "F",
     # pycodestyle
+    "D",
     "E",
     "W",
     # flake8-2020
@@ -86,8 +87,18 @@ ignore = [
     "B006",
     # recommended by Ruff to disable to avoid issues with formatter
     "COM812", "ISC001",
+    # extra rules on documentation strings
+    "D100", "D401", "D203", "D213",
+
 ]
-per-file-ignores = {"__init__.py" = ["F401"]}
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+
+# requires docstring rules in sparklib
+"src/pulse_telemetry/sparklib/__init__.py" = ["D"]
+"!src/pulse_telemetry/sparklib/**/*.py" = ["D"]
+
 
 [tool.ruff.lint.flake8-type-checking]
 quote-annotations = true

@@ -3,7 +3,7 @@
 
 wait_for_pod_ready() {
     local app_label=$1
-    local timeout=90  # 90 seconds timeout
+    local timeout=120  # 120 seconds timeout
     local interval=10  # Check every 10 seconds
     local start_time=$(date +%s)
 

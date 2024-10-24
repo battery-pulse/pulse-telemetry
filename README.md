@@ -50,7 +50,7 @@ See the [developer guide](https://github.com/battery-pulse/developer-guide/blob/
 
 - **Integration Tests**: Verify the data source and sink connectors, ensuring that the application can successfully connect to, read from, and write to external systems. Rely on Hive and Minio running in a local kind cluster.
 
-- **Application Tests**: Confirm the behavior of applications within Kubernetes, ensuring that Spark applications are correctly deployed as custom resources. These tests check the end-to-end functionality, from deployment to data processing, ensuring that the applications behave as expected when deployed in the cluster.
+- **End-to-end Tests**: Confirm the behavior of applications within Kubernetes, ensuring that Spark applications are correctly deployed as custom resources. These tests check the end-to-end functionality, from deployment to data processing, ensuring that the applications behave as expected when deployed in the cluster.
 
 ### Partitions and Sort Order
 

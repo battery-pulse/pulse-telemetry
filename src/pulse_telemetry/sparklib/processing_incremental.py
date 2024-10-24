@@ -1,9 +1,3 @@
-"""Implements incramental processing for statistics_step and statistics_cycle. Partition
-pruning is implemented through the date partitions in telemetry and statistics_step:
-- telemetry (device_id, test_id, month)
-- statistics_step (year)
-"""
-
 import datetime
 from typing import TYPE_CHECKING
 
@@ -57,8 +51,8 @@ def processing_incremental(
     -------
     DataFrame
         The DataFrame resulting from applying the aggregation function to the filtered source records.
-    """
 
+    """
     # Get the adjusted last processed timestamp from the sink DataFrame
     watermark = _adjusted_watermark(
         sink=sink,

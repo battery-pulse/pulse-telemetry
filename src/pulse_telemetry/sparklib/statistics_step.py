@@ -88,6 +88,7 @@ def statistics_step(df: "DataFrame") -> "DataFrame":
     ```
     df = df.withWatermark("update_ts", "14 days")
     ```
+
     """
     # Calculating weighted averages using the duration__s column
     time_weighted_avg = lambda col: (F.sum(F.col(col) * F.col("duration__s")) / F.sum("duration__s"))  # noqa: E731
