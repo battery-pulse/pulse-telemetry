@@ -32,10 +32,24 @@ echo "Monitoring SparkApplication status..."
 sleep 3
 if kubectl wait pods -l "job-name=$SPARK_APP_NAME" \
   --for=jsonpath='{.status.phase}'=Succeeded --timeout="${TIMEOUT}s"; then
-  echo "SparkApplication completed successfully."
-  echo "Removing spark custom resource..."
-  kubectl delete -f "$MANIFEST_FILE"
-  exit 0
+  echo "SparkApplication completed."
+
+  # If the job completes, need to check the status of the custom resource
+  phase=$(kubectl get sparkapplication "$SPARK_APP_NAME" -o jsonpath='{.status.phase}')
+  if [[ "$phase" == "Succeeded" ]]; then
+    echo "SparkApplication completed successfully."
+    kubectl delete -f "$MANIFEST_FILE"
+    exit 0
+  elif [[ "$phase" == "Failed" ]]; then
+    echo "SparkApplication failed."
+    kubectl delete -f "$MANIFEST_FILE"
+    exit 1
+  else
+    echo "SparkApplication in non-terminal phase: $phase."
+    kubectl delete -f "$MANIFEST_FILE"
+    exit 1
+  fi
+
 else
   echo "SparkApplication failed or timed out."
   echo "Removing spark custom resource..."

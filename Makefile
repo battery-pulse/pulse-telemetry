@@ -28,9 +28,9 @@ test-unit:
 test-integration:
 	pytest tests/integration/ -s
 
-.PHONY: test-application
-test-application:
-	pytest tests/application/ -s
+.PHONY: test-e2e
+test-e2e:
+	pytest tests/e2e/ -s
 
 .PHONY: docker-image
 docker-image:

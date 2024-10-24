@@ -38,8 +38,6 @@ def kind_cluster():
 
 @pytest.fixture(scope="session")
 def build_docker_image():
-    # docker build -t pulse-telemetry:latest .
-    # kind load docker-image pulse-telemetry:latest --name kind
     subprocess.run(["docker", "build", "-t", "pulse-telemetry:latest", "."], check=True)
     yield
 

@@ -1,25 +1,38 @@
 from pulse_telemetry.apps import table_maintenance
 from pulse_telemetry.sparklib import iceberg, telemetry
-from py4j.protocol import Py4JJavaError
 
 
 def test_main(spark_session, telemetry_df):
-    # Can not run job against table that does not exist
+    # Can not run job against schema that does not exist
     try:
         table_maintenance.main(
             spark=spark_session,
             catalog="lakehouse",
             database="table_maintenance",
-            table="telemetry",
             older_than_days=5,
             retain_last=3,
         )
         result = "passed"
-    except Py4JJavaError:
+    except table_maintenance.NoTablesFoundError:
         result = "failed"
-    assert result == "failed", "Can not run job against table that does not exist"
+    assert result == "failed", "Can not run job against schema that does not exist"
 
-    # Job should pass on table that does exist
+    # Job should fail when schema exists but there are no tables
+    spark_session.sql("CREATE SCHEMA IF NOT EXISTS lakehouse.table_maintenance")
+    try:
+        table_maintenance.main(
+            spark=spark_session,
+            catalog="lakehouse",
+            database="table_maintenance",
+            older_than_days=5,
+            retain_last=3,
+        )
+        result = "passed"
+    except table_maintenance.NoTablesFoundError:
+        result = "failed"
+    assert result == "failed", "Job should fail if there is a schema but no tables"
+
+    # Job should pass when a table exists
     iceberg.create_table_if_not_exists(
         spark=spark_session,
         catalog_name="lakehouse",
@@ -35,11 +48,10 @@ def test_main(spark_session, telemetry_df):
             spark=spark_session,
             catalog="lakehouse",
             database="table_maintenance",
-            table="telemetry",
             older_than_days=5,
             retain_last=3,
         )
         result = "passed"
-    except Py4JJavaError:
+    except table_maintenance.NoTablesFoundError:
         result = "failed"
     assert result == "passed", "Job should pass on table that does exist"

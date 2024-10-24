@@ -19,11 +19,6 @@ spec:
         configMapKeyRef:
           name: table-maintenance-config
           key: PULSE_TELEMETRY_DATABASE
-    - name: PULSE_TELEMETRY_TABLE
-      valueFrom:
-        configMapKeyRef:
-          name: table-maintenance-config
-          key: PULSE_TELEMETRY_TABLE
     - name: PULSE_TELEMETRY_OLDER_THAN_DAYS
       valueFrom:
         configMapKeyRef:
@@ -73,6 +68,5 @@ metadata:
 data:
   PULSE_TELEMETRY_CATALOG: "lakehouse"
   PULSE_TELEMETRY_DATABASE: "dev"
-  PULSE_TELEMETRY_TABLE: "telemetry"
   PULSE_TELEMETRY_OLDER_THAN_DAYS: "5"
   PULSE_TELEMETRY_RETAIN_LAST: "48"  # assuming hourly jobs, 2 days worth at minimum
