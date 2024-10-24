@@ -51,8 +51,8 @@ def processing_incremental(
     -------
     DataFrame
         The DataFrame resulting from applying the aggregation function to the filtered source records.
-    """
 
+    """
     # Get the adjusted last processed timestamp from the sink DataFrame
     watermark = _adjusted_watermark(
         sink=sink,

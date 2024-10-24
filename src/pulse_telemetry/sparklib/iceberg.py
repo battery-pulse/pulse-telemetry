@@ -48,6 +48,7 @@ def create_table_if_not_exists(
     Returns
     -------
     None
+
     """
     # Creates the database if it does not exist
     spark.sql(f"CREATE SCHEMA IF NOT EXISTS {catalog_name}.{database_name}")
@@ -91,6 +92,7 @@ def read_table(spark: "SparkSession", catalog_name: str, database_name: str, tab
     -------
     DataFrame
         A PySpark DataFrame representing the table.
+
     """
     return spark.sql(f"SELECT * FROM {catalog_name}.{database_name}.{table_name}")
 
@@ -125,6 +127,7 @@ def merge_into_table(
     Returns
     -------
     None
+
     """
     source_df.createOrReplaceTempView("source")
     match_condition = " AND ".join([f"target.{col} = source.{col}" for col in match_columns])
@@ -149,8 +152,7 @@ def expire_snapshots(
     retain_last: int,
     max_concurrent_deletes: int = 8,
 ) -> int:
-    """
-    Removes old snapshots from the specified Iceberg table.
+    """Removes old snapshots from the specified Iceberg table.
 
     Parameters
     ----------
@@ -173,6 +175,7 @@ def expire_snapshots(
     -------
     int
         The number of data files deleted during snapshot expiration.
+
     """
     older_than_str = older_than.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
     return spark.sql(f"""
@@ -193,8 +196,7 @@ def remove_orphan_files(
     older_than: "datetime.datetime",
     max_concurrent_deletes: int = 8,
 ) -> int:
-    """
-    Removes orphaned files from the specified Iceberg table.
+    """Removes orphaned files from the specified Iceberg table.
 
     Parameters
     ----------
@@ -215,6 +217,7 @@ def remove_orphan_files(
     -------
     int
         The count of orphaned files removed during the operation.
+
     """
     older_than_str = older_than.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
     return spark.sql(f"""
@@ -232,8 +235,7 @@ def rewrite_data_files(
     database_name: str,
     table_name: str,
 ) -> int:
-    """
-    Rewrites data files from the specified Iceberg table.
+    """Rewrites data files from the specified Iceberg table.
 
     Uses the 'sort' strategy and defaults to the table's sort-order.
 
@@ -252,6 +254,7 @@ def rewrite_data_files(
     -------
     int
         The sum of the rewritten and new data files.
+
     """
     result = spark.sql(f"""
         CALL {catalog_name}.system.rewrite_data_files(
@@ -268,8 +271,7 @@ def rewrite_manifests(
     database_name: str,
     table_name: str,
 ) -> int:
-    """
-    Rewrites manifest files from the specified Iceberg table.
+    """Rewrites manifest files from the specified Iceberg table.
 
     Parameters
     ----------
@@ -286,6 +288,7 @@ def rewrite_manifests(
     -------
     int
         The sum of the rewritten and new manifest files.
+
     """
     result = spark.sql(f"""
         CALL {catalog_name}.system.rewrite_manifests(
