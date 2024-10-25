@@ -1,40 +1,40 @@
 apiVersion: spark.stackable.tech/v1alpha1
 kind: SparkApplication
 metadata:
-  name: table-maintenance
+  name: telemetry-statistics
 spec:
   sparkImage:
     custom: "pulse-telemetry:latest" 
     productVersion: "3.5.1" 
     pullPolicy: IfNotPresent
-  mainApplicationFile: local:////pulse-telemetry/src/pulse_telemetry/apps/table_maintenance.py
+  mainApplicationFile: local:////pulse-telemetry/src/pulse_telemetry/apps/telemetry_statistics.py
   env:
     - name: PULSE_TELEMETRY_CATALOG
       valueFrom:
         configMapKeyRef:
-          name: table-maintenance-config
+          name: telemetry-statistics-config
           key: PULSE_TELEMETRY_CATALOG
     - name: PULSE_TELEMETRY_DATABASE
       valueFrom:
         configMapKeyRef:
-          name: table-maintenance-config
+          name: telemetry-statistics-config
           key: PULSE_TELEMETRY_DATABASE
-    - name: PULSE_TELEMETRY_OLDER_THAN_DAYS
+    - name: PULSE_TELEMETRY_WATERMARK_BUFFER_MINUTES
       valueFrom:
         configMapKeyRef:
-          name: table-maintenance-config
-          key: PULSE_TELEMETRY_OLDER_THAN_DAYS
-    - name: PULSE_TELEMETRY_RETAIN_LAST
+          name: telemetry-statistics-config
+          key: PULSE_TELEMETRY_WATERMARK_BUFFER_MINUTES
+    - name: PULSE_TELEMETRY_PARTITION_CUTOFF_DAYS
       valueFrom:
         configMapKeyRef:
-          name: table-maintenance-config
-          key: PULSE_TELEMETRY_RETAIN_LAST
+          name: telemetry-statistics-config
+          key: PULSE_TELEMETRY_PARTITION_CUTOFF_DAYS
   sparkConf:
     spark.sql.extensions: org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions
-    spark.sql.catalog.lakehouse: org.apache.iceberg.spark.SparkCatalog
+    spark.sql.catalog.lakehouse: org.apache.iceberg.spark.SparkCatalog  # catalog name should match config map below
     spark.sql.catalog.lakehouse.type: hive
-    spark.sql.catalog.lakehouse.uri: thrift://hive-metastore.default.svc:9083
-    spark.sql.catalog.lakehouse.warehouse: s3a://lakehouse/
+    spark.sql.catalog.lakehouse.uri: thrift://hive-metastore.default.svc:9083  # match your metastore address
+    spark.sql.catalog.lakehouse.warehouse: s3a://lakehouse/  # set your warehouse directory
     spark.sql.session.timeZone: UTC
   deps:
     packages:
@@ -42,12 +42,12 @@ spec:
       - org.apache.hadoop:hadoop-aws:3.3.4
   mode: cluster
   s3connection:
-    reference: minio
+    reference: minio  # match your minio s3 connection
   driver:
     config:
       resources:
         cpu:
-          min: "500m"
+          min: "1"
           max: "2"
         memory:
           limit: "1Gi"
@@ -56,7 +56,7 @@ spec:
     config:
       resources:
         cpu:
-          min: "500m"
+          min: "1"
           max: "2"
         memory:
           limit: "1Gi"
@@ -64,9 +64,9 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: table-maintenance-config
+  name: telemetry-statistics-config
 data:
   PULSE_TELEMETRY_CATALOG: "lakehouse"
   PULSE_TELEMETRY_DATABASE: "dev"
-  PULSE_TELEMETRY_OLDER_THAN_DAYS: "5"
-  PULSE_TELEMETRY_RETAIN_LAST: "48"  # assuming hourly jobs, 2 days worth at minimum
+  PULSE_TELEMETRY_WATERMARK_BUFFER_MINUTES: "60"
+  PULSE_TELEMETRY_PARTITION_CUTOFF_DAYS: "30"

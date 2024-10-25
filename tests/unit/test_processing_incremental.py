@@ -163,7 +163,7 @@ def test_updated_groups_in_source(empty_source, populated_source, all_groups):
         watermark_column="update_ts",
     )
     assert groups.count() == 2, "Expected all groups"
-    assert groups.collect() == all_groups.collect(), "Expected all groups"
+    assert groups.orderBy("step").collect() == all_groups.collect(), "Expected all groups"
 
     # Half of the groups
     groups = processing_incremental._updated_groups_in_source(

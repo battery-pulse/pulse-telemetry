@@ -1,5 +1,10 @@
 # Pulse Telemetry
 
+<!-- ![GitHub Actions Status](https://github.com/battery-pulse/pulse-telemetry/actions/workflows/CI.yml/badge.svg?branch=main)
+![Python Version](https://img.shields.io/badge/python-3.11-blue.svg) -->
+<!-- ![Docker Image Version](https://img.shields.io/docker/v/ghcr.io/battery-pulse/pulse-telemetry?label=Docker%20Image&sort=semver) -->
+
+
 Welcome to the Pulse Telemetry repository. This project contains Spark applications designed to transform raw telemetry data into a series of structured schemas for comprehensive analysis. The flexible architecture allows for easy extension—developers can deploy additional Spark applications to create new schemas or enhance existing ones to meet evolving analytical needs.
 
 
