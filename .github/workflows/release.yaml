@@ -18,23 +18,9 @@ jobs:
       - name: Install dependencies
         run: make install
 
-      - name: Get Version from __init__.py
+      - name: Get Release Version
         id: get_version
-        run: |
-          VERSION=$(python -c "from src.pulse_telemetry import __version__; print(__version__)")
-          echo "package_version=$VERSION" >> $GITHUB_ENV
-
-      - name: Check if Docker image version exists in GitHub Container Registry
-        id: check_docker_registry
-        run: |
-          if curl -s -o /dev/null -w "%{http_code}" \
-             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-             https://ghcr.io/v2/battery-pulse/pulse-telemetry/manifests/${{ env.package_version }} \
-             | grep -q "200"; then
-            echo "Docker image version ${{ env.package_version }} already exists in the registry."
-            exit 1
-          fi
-        shell: bash
+        run: echo "package_version=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v2
