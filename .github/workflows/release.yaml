@@ -9,7 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read      # Required to access repository content
-      id-token: write     # Necessary for OIDC-based authentication with PyPI
+      packages: write     # Required for docker image
+      id-token: write     # Required for PyPI
     steps:
       - uses: actions/checkout@v2
 
