@@ -7,6 +7,9 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read      # Required to access repository content
+      id-token: write     # Necessary for OIDC-based authentication with PyPI
     steps:
       - uses: actions/checkout@v2
 
