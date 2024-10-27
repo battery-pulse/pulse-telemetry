@@ -1,6 +1,6 @@
 import subprocess
 
-from pulse_telemetry.sparklib import iceberg, telemetry
+from pulse_telemetry.sparklib import iceberg
 
 from .conftest import launch_spark_application
 
