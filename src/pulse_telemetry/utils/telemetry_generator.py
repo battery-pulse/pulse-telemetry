@@ -187,3 +187,56 @@ async def telemetry_generator(
             state["step_energy_discharged__Wh"] = 0
         else:
             continue
+
+
+if __name__ == "__main__":
+    import os
+
+    from pyspark.sql import SparkSession
+
+    from pulse_telemetry.sparklib import iceberg, telemetry
+    from pulse_telemetry.utils import channel
+
+    catalog = os.environ["PULSE_TELEMETRY_CATALOG"]
+    database = os.environ["PULSE_TELEMETRY_DATABASE"]
+    num_channels = int(os.environ["PULSE_TELEMETRY_NUM_CHANNELS"])
+    timeout_seconds = float(os.environ["PULSE_TELEMETRY_TIMEOUT_SECONDS"])
+    acquisition_frequency = int(os.environ["PULSE_TELEMETRY_ACQUISITION_FREQUENCY"])
+    points_per_step = int(os.environ["PULSE_TELEMETRY_POINTS_PER_STEP"])
+
+    spark = SparkSession.builder.appName("TelemetryGenerator").getOrCreate()
+
+    # Create telemetry table if not exists
+    iceberg.create_table_if_not_exists(
+        spark=spark,
+        catalog_name=catalog,
+        database_name=database,
+        table_name="telemetry",
+        table_comment=telemetry.telemetry_comment,
+        table_schema=telemetry.telemetry_schema,
+        partition_columns=telemetry.telemetry_partitions,
+        write_order_columns=telemetry.telemetry_write_order,
+    )
+
+    # Runs generator and loads data into iceberg table
+    local_buffer = channel.LocalBuffer()
+    channel.run_with_timeout(
+        source=telemetry_generator,
+        sink=local_buffer,
+        topic="telemetry",
+        num_channels=num_channels,
+        timeout_seconds=timeout_seconds,
+        acquisition_frequency=acquisition_frequency,
+        points_per_step=points_per_step,
+        lower_voltage_limit=3,  # V
+        upper_voltage_limit=4,  # V
+        current=1.0,  # A
+    )
+    iceberg.merge_into_table(
+        spark=spark,
+        source_df=local_buffer.dataframe(spark, telemetry.telemetry_schema),
+        catalog_name=catalog,
+        database_name=database,
+        table_name="telemetry",
+        match_columns=telemetry.telemetry_composite_key,
+    )
