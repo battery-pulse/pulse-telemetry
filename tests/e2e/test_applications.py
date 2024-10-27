@@ -1,6 +1,6 @@
 import subprocess
 
-from pulse_telemetry.sparklib import iceberg, telemetry
+from pulse_telemetry.sparklib import iceberg
 
 from .conftest import launch_spark_application
 
@@ -28,13 +28,8 @@ def test_applications(kubernetes_services, spark_session, telemetry_df, statisti
     assert records.count() == 0, "Running the app should create tables"
 
     # Running the app with data should populate tables
-    iceberg.merge_into_table(
-        spark=spark_session,
-        source_df=telemetry_df,
-        catalog_name="lakehouse",
-        database_name="dev",
-        table_name="telemetry",
-        match_columns=telemetry.telemetry_composite_key,
+    launch_spark_application(
+        application_name="telemetry-generator", manifest_file_name="telemetry-generator.yaml", timeout_seconds="240"
     )
     launch_spark_application(
         application_name="telemetry-statistics", manifest_file_name="telemetry-statistics.yaml", timeout_seconds="240"
