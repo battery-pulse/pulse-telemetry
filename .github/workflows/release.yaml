@@ -19,7 +19,7 @@ jobs:
         id: get_version
         run: echo "package_version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
 
-      - name: Build and Publish Python Package
+      - name: Build Python Package
         env:
           PACKAGE_VERSION: ${{ env.package_version }}
         run: |
@@ -27,7 +27,11 @@ jobs:
           pip install build twine
           sed -i "s/__version__ = .*/__version__ = \"$PACKAGE_VERSION\"/" src/pulse_telemetry/__init__.py
           python -m build
-          twine upload dist/*
+
+      - name: Publish Python Package
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          package_dir: dist
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v2
